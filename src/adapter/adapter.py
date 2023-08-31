@@ -55,36 +55,68 @@ class Adapter:
             while deformation_stack:
                 deformation_node = deformation_stack.pop()
                 # Handle the node.
-                new_nodes = cls._handle_boundary_node(deformation_node)
+                new_nodes = cls._boundary_node_handler(deformation_node)
                 # Push new nodes to stack.
                 deformation_stack.extend(new_nodes)
 
     @classmethod
-    def _handle_boundary_node(cls, node: tuple,) -> List[tuple]:
-        """Handle a boundary node.
+    def _boundary_node_handler(cls, node: tuple) -> List[tuple]:
+        """Handler for a boundary node.
             Args:
                 node: The node to handle.
-                node_boundary_type: The boundary type of the node.
                 
             Returns:
                 A list of new nodes introduced by the node."""
 
+        # If the node type is X or Z, call syndrome handler.
+        if cls._get_node_type(node) == 'X' or cls._get_node_type(node) == 'Z':
+            return cls._boundary_syndrome_handler(node)
+        # If the node type is D, call data qubit handler.
+        if cls._get_node_type(node) == 'D':
+            return cls._boundary_data_handler(node)
         
+    @classmethod
+    def _boundary_data_handler(cls, node: tuple) -> List[tuple]:
+        """Handler for a boundary data.
+            Args:
+                node: The node to handle.
+            
+            Returns:
+                A list of new nodes introduced by the node."""
+        
+        # Check if the boundary data is safe, if safe, return.
+        if cls._boundary_data_safety_check(node):
+            return []
 
-        # If the node is defective, disable it.
-        if cls._is_defective_node(node):
-            cls._disable_node(node)
+        # If not safe, disable the node.
+        cls._disable_node(node)
 
-        # If frontier contains defective node, disable this node and defective nodes in frontier.
-        if any([cls._is_defective_node(neighbor) for neighbor in frontier]):
+        # return undisabled neighbors.
+        return cls._get_undisabled_neighbors(node)
+    
+    @classmethod
+    def _boundary_syndrome_handler(cls, node: tuple) -> List[tuple]:
+        """Handler for a boundary syndrome.
+            Args:
+                node: The node to handle.
+            
+            Returns:
+                A list of new nodes introduced by the node."""
+        
+        # If this syndrome has different type with current boundary type, disable it.
+        if cls.current_boundary_type != NodeBoundaryType.X and cls._get_node_type(node) == 'X' or cls.current_boundary_type != NodeBoundaryType.Z and cls._get_node_type(node) == 'Z':
             cls._disable_node(node)
-            for neighbor in frontier:
-                if cls._is_defective_node(neighbor):
-                    cls._disable_node(neighbor)
-            return
+            # return undisabled neighbors.
+            return cls._get_undisabled_neighbors(node)
+        
+        # If this syndrome has only 1 undisabled neighbor, disable it.
+        if len(cls._get_undisabled_neighbors(node)) == 1:
+            cls._disable_node(node)
+            # return undisabled neighbors.
+            return cls._get_undisabled_neighbors(node)
 
     @classmethod
-    def _boundary_node_safety_check(cls, node: tuple) -> bool:
+    def _boundary_data_safety_check(cls, node: tuple) -> bool:
         # If the node is defective, its unsafe.
         if cls._is_defective_node(node):
             return False
@@ -135,6 +167,8 @@ class Adapter:
         # If not match any type, raise exception.
         raise AdapterException(f'Invalid frontier type: frontier is {frontier}, node types is {node_types}.')
 
+
+    # Utility functions.
 
     @classmethod
     def _disable_node(cls, node: tuple):
