@@ -34,6 +34,8 @@ class Adapter:
 
         cls._boundary_deformation()
 
+        return cls.adapt_result
+
     @classmethod
     def _boundary_deformation(cls):
         "Main boundary deformation function."
@@ -104,18 +106,23 @@ class Adapter:
 
     @classmethod
     def _boundary_syndrome_handler(cls, boundary_node: BoundaryNode) -> List[BoundaryNode]:
-        node = boundary_node.node
-        # If this syndrome has different type with boundary node type, disable it.
-        if boundary_node.node_type != BoundaryNodeType.X and cls._get_node_type(node) == 'X' or boundary_node.node_type != BoundaryNodeType.Z and cls._get_node_type(node) == 'Z':
-            cls._disable_node(node)
-            # Introduce new boundary nodes.
-            return cls._introduce_new_boundary_nodes(boundary_node)
+        """Handler for a boundary syndrome.
+            Args:
+                boundary_node: The boundary node to handle.
 
-        # If this syndrome has only 1 undisabled neighbor, disable it.
-        if len(cls._get_undisabled_neighbors(node)) == 1:
-            cls._disable_node(node)
-            # Introduce new boundary nodes.
-            return cls._introduce_new_boundary_nodes(boundary_node)
+            Returns:
+                A list of new boundary nodes introduced by the boundary node.
+        """
+        node = boundary_node.node
+
+        # Check if the boundary syndrome is safe, if safe, return.
+        if cls._boundary_syndrome_safety_check(boundary_node):
+            return []
+        
+        # If not safe, disable the node.
+        cls._disable_node(node)
+        # Introduce new boundary nodes.
+        return cls._introduce_new_boundary_nodes(boundary_node)
 
     @classmethod
     def _introduce_new_boundary_nodes(cls, boundary_node: BoundaryNode) -> List[BoundaryNode]:
@@ -160,6 +167,20 @@ class Adapter:
         return True
 
     @classmethod
+    def _boundary_syndrome_safety_check(cls, boundary_node: BoundaryNode) -> bool:
+        node = boundary_node.node
+        # If this syndrome has different type with boundary node type, its unsafe.
+        if boundary_node.node_type != BoundaryNodeType.X and cls._get_node_type(node) == 'X' or boundary_node.node_type != BoundaryNodeType.Z and cls._get_node_type(node) == 'Z':
+            return False
+
+        # If this syndrome has only 1 undisabled neighbor, its unsafe.
+        if len(cls._get_undisabled_neighbors(node)) == 1:
+            return False
+        
+        # If all check passed, its safe.
+        return True
+
+    @classmethod
     def _frontier_boundary_type(cls, frontier: List[tuple]):
         """Compute the frontier type.
             Args:
@@ -173,17 +194,17 @@ class Adapter:
         if len(node_types) == 3:
             # If Z is more than X, its Z type.
             if node_types.count('Z') > node_types.count('X'):
-                return BoundaryType.Z
+                return BoundaryNodeType.Z
             # If X is more than Z, its X type.
             elif node_types.count('X') > node_types.count('Z'):
-                return BoundaryType.X
+                return BoundaryNodeType.X
         if len(node_types) == 2:
             # If Z equal to X, its C type.
             if node_types.count('Z') == node_types.count('X'):
-                return BoundaryType.C
+                return BoundaryNodeType.C
 
         # If does not match any type, its N type.
-        return BoundaryType.N
+        return BoundaryNodeType.N
 
     # Utility functions.
 
@@ -195,8 +216,9 @@ class Adapter:
         """
         # If node already disabled, raise exception.
         if cls._is_disabled_node(node):
-            raise AdapterException(f'Node {node} already disabled.')
-
+            print(f'Node {node} already disabled.')
+            # raise AdapterException(f'Node {node} already disabled.')
+        
         cls.adapt_result['disabled_nodes'].append(node)
 
     @classmethod

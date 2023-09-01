@@ -13,6 +13,6 @@ result = Adapter.adapt_device(device)
 plt.subplot(121)
 plot_graph(device.graph, [])
 plt.subplot(122)
-plot_graph(result.graph, result.disabled_nodes)
+plot_graph(device.graph, result['disabled_nodes'])
 
 plt.show()
