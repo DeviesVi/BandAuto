@@ -51,10 +51,6 @@ class Adapter:
 
         # Handle all boundary nodes.
         for node in boundary_nodes:
-            # If node has been disabled, skip
-            if cls._is_disabled_node(node):
-                continue
-
             deformation_stack: List[BoundaryNode] = [BoundaryNode(
                 node=node, node_type=cls._get_boundary_node_type(node))]
             while deformation_stack:
@@ -77,6 +73,9 @@ class Adapter:
         """
 
         node = boundary_node.node
+        # If node has been disabled, return empty
+        if cls._is_disabled_node(node):
+            return []
         # If the node type is X or Z, call syndrome handler.
         if cls._get_node_type(node) == 'X' or cls._get_node_type(node) == 'Z':
             return cls._boundary_syndrome_handler(boundary_node)
@@ -173,8 +172,8 @@ class Adapter:
         if boundary_node.node_type != BoundaryNodeType.X and cls._get_node_type(node) == 'X' or boundary_node.node_type != BoundaryNodeType.Z and cls._get_node_type(node) == 'Z':
             return False
 
-        # If this syndrome has only 1 undisabled neighbor, its unsafe.
-        if len(cls._get_undisabled_neighbors(node)) == 1:
+        # If this syndrome has less than 2 undisabled neighbor, its unsafe.
+        if len(cls._get_undisabled_neighbors(node)) < 2:
             return False
         
         # If all check passed, its safe.
