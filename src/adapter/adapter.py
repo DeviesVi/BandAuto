@@ -2,7 +2,7 @@
 import networkx as nx
 from ..device import Device
 from typing import Dict, Union, List, Set
-from .boundary import Boundary, BoundaryType, NodeBoundaryType
+from .data import Boundary, BoundaryType, BoundaryNode, BoundaryNodeType
 from .exception import AdapterException
 
 
@@ -39,32 +39,35 @@ class Adapter:
         "Main boundary deformation function."
 
         # Get all type of boundary.
-        boundaries = {boundary_type: cls._get_boundary(
+        cls.boundaries = {boundary_type: cls._get_boundary(
             boundary_type) for boundary_type in BoundaryType}
 
         # Get all nodes in boundaries.
         boundary_nodes = set()
-        for boundary in boundaries.values():
+        for boundary in cls.boundaries.values():
             boundary_nodes.update(boundary.nodes)
 
         # Handle all boundary nodes.
         for node in boundary_nodes:
-            # Get node boundary type and set it to class for later use.
-            cls.current_boundary_type = cls._node_boundary_type(node)
-            deformation_stack = [node]
+            # If node has been disabled, skip
+            if cls._is_disabled_node(node):
+                continue
+            
+            deformation_stack = [BoundaryNode(node=node, node_type=cls._get_boundary_node_type(node))]
             while deformation_stack:
                 deformation_node = deformation_stack.pop()
+
                 # Handle the node.
                 new_nodes = cls._boundary_node_handler(deformation_node)
                 # Push new nodes to stack.
                 deformation_stack.extend(new_nodes)
 
     @classmethod
-    def _boundary_node_handler(cls, node: tuple) -> List[tuple]:
+    def _boundary_node_handler(cls, node: BoundaryNode) -> List[BoundaryNode]:
         """Handler for a boundary node.
             Args:
                 node: The node to handle.
-                
+
             Returns:
                 A list of new nodes introduced by the node."""
 
@@ -74,16 +77,16 @@ class Adapter:
         # If the node type is D, call data qubit handler.
         if cls._get_node_type(node) == 'D':
             return cls._boundary_data_handler(node)
-        
+
     @classmethod
     def _boundary_data_handler(cls, node: tuple) -> List[tuple]:
         """Handler for a boundary data.
             Args:
                 node: The node to handle.
-            
+
             Returns:
                 A list of new nodes introduced by the node."""
-        
+
         # Check if the boundary data is safe, if safe, return.
         if cls._boundary_data_safety_check(node):
             return []
@@ -93,22 +96,22 @@ class Adapter:
 
         # return undisabled neighbors.
         return cls._get_undisabled_neighbors(node)
-    
+
     @classmethod
     def _boundary_syndrome_handler(cls, node: tuple) -> List[tuple]:
         """Handler for a boundary syndrome.
             Args:
                 node: The node to handle.
-            
+
             Returns:
                 A list of new nodes introduced by the node."""
-        
+
         # If this syndrome has different type with current boundary type, disable it.
-        if cls.current_boundary_type != NodeBoundaryType.X and cls._get_node_type(node) == 'X' or cls.current_boundary_type != NodeBoundaryType.Z and cls._get_node_type(node) == 'Z':
+        if cls.current_boundary_type != BoundaryNodeType.X and cls._get_node_type(node) == 'X' or cls.current_boundary_type != BoundaryNodeType.Z and cls._get_node_type(node) == 'Z':
             cls._disable_node(node)
             # return undisabled neighbors.
             return cls._get_undisabled_neighbors(node)
-        
+
         # If this syndrome has only 1 undisabled neighbor, disable it.
         if len(cls._get_undisabled_neighbors(node)) == 1:
             cls._disable_node(node)
@@ -120,29 +123,28 @@ class Adapter:
         # If the node is defective, its unsafe.
         if cls._is_defective_node(node):
             return False
-        
+
         # Get all undisabled neighbors.
         frontier = cls._get_undisabled_neighbors(node)
-        
+
         # If frontier contains defective node, its unsafe.
         if any([cls._is_defective_node(neighbor) for neighbor in frontier]):
             return False
-        
+
         # If edge between this node and frontier is defective, its unsafe.
         for neighbor in frontier:
             if cls._is_defective_edge(node, neighbor):
                 return False
 
         # If frontier type not match current boundary type, its unsafe.
-        if cls._frontier_type(frontier) != cls.current_boundary_type:
+        if cls._frontier_boundary_type(frontier) != cls.current_boundary_type:
             return False
-        
+
         # If all check passed, its safe.
         return True
-        
-    
+
     @classmethod
-    def _frontier_type(cls, frontier: List[tuple]):
+    def _frontier_boundary_type(cls, frontier: List[tuple]):
         """Compute the frontier type.
             Args:
                 frontier: The frontier to compute.
@@ -163,10 +165,10 @@ class Adapter:
             # If Z equal to X, its C type.
             if node_types.count('Z') == node_types.count('X'):
                 return BoundaryType.C
-        
-        # If not match any type, raise exception.
-        raise AdapterException(f'Invalid frontier type: frontier is {frontier}, node types is {node_types}.')
 
+        # If not match any type, raise exception.
+        raise AdapterException(
+            f'Invalid frontier type: frontier is {frontier}, node types is {node_types}.')
 
     # Utility functions.
 
@@ -316,20 +318,23 @@ class Adapter:
         return [node for node in cls.device.graph.nodes if node[0] == 2*cls.device.data_width-1]
 
     @classmethod
-    def _node_boundary_type(cls, node: tuple) -> NodeBoundaryType:
-        """Get node boundary type.
+    def _get_boundary_node_type(cls, node: tuple) -> BoundaryNodeType:
+        """Get boundary node type of a node.
             Args:
                 node: The node to get boundary type.
 
             Returns:
                 A node boundary type, C for corner, the node is in both X and Z.
         """
-
-        if node in cls.boundaries[BoundaryType.XT].nodes and node in cls.boundaries[BoundaryType.ZR].nodes:
-            return NodeBoundaryType.C
-        elif node in cls.boundaries[BoundaryType.XT].nodes:
-            return NodeBoundaryType.X
-        elif node in cls.boundaries[BoundaryType.ZR].nodes:
-            return NodeBoundaryType.Z
+        # If node in x boundary and z boundary, its corner.
+        if node in cls.boundaries[BoundaryType.XT].nodes + cls.boundaries[BoundaryType.XB].nodes and node in cls.boundaries[BoundaryType.ZL].nodes + cls.boundaries[BoundaryType.ZR].nodes:
+            return BoundaryNodeType.C
+        # If node in x boundary, its x.
+        elif node in cls.boundaries[BoundaryType.XT].nodes + cls.boundaries[BoundaryType.XB].nodes:
+            return BoundaryNodeType.X
+        # If node in z boundary, its z.
+        elif node in cls.boundaries[BoundaryType.ZL].nodes + cls.boundaries[BoundaryType.ZR].nodes:
+            return BoundaryNodeType.Z
+        # If node not in any boundary, its not boundary.
         else:
-            return NodeBoundaryType.N
+            return BoundaryNodeType.N

@@ -14,12 +14,17 @@ class BoundaryType(enum.Enum):
     ZL = 2
     ZR = 3
 
-class NodeBoundaryType(enum.Enum):
-    """Node boundary type enum."""
+class BoundaryNodeType(enum.Enum):
+    """Boundary Node type enum."""
     X = 0
     Z = 1 
     C = 2 # Corner
     N = 3 # Not boundary
+
+@dataclasses.dataclass
+class BoundaryNode:
+    node: tuple
+    node_type: BoundaryNodeType
 
 @dataclasses.dataclass
 class Boundary:
