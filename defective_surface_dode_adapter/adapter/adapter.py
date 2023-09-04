@@ -30,7 +30,7 @@ class Adapter:
             'logical_z_data_qubits': [],
         }
 
-        cls.device = device
+        cls._device = device
 
         cls._boundary_deformation()
         cls._interal_defect_handler()
@@ -43,12 +43,12 @@ class Adapter:
         "Main boundary deformation function."
 
         # Get all type of boundary.
-        cls.boundaries = {boundary_type: cls._get_boundary(
+        cls._boundaries = {boundary_type: cls._get_boundary(
             boundary_type) for boundary_type in BoundaryType}
 
         # Get all nodes in boundaries.
         boundary_nodes = set()
-        for boundary in cls.boundaries.values():
+        for boundary in cls._boundaries.values():
             boundary_nodes.update(boundary.nodes)
 
         # Handle all boundary nodes.
@@ -213,7 +213,9 @@ class Adapter:
 
     @classmethod
     def _interal_defect_handler(cls):
-        """Handle internal defects."""
+        """Handle internal defects. If disabled internal node, record it."""
+
+        cls._internal_disalbed_recorder = []
 
         # Handle internal defective syndrome.
         cls._internal_defective_syndrome_handler()
@@ -229,7 +231,7 @@ class Adapter:
         """Handle internal defective syndrome."""
 
         # Get all defective syndrome undisabled.
-        defective_syndromes = [node for node in cls.device.graph.nodes if (cls._get_node_type(node) == 'X' or cls._get_node_type(node) == 'Z') and cls._is_defective_node(node) and not cls._is_disabled_node(node)]
+        defective_syndromes = [node for node in cls._device.graph.nodes if (cls._get_node_type(node) == 'X' or cls._get_node_type(node) == 'Z') and cls._is_defective_node(node) and not cls._is_disabled_node(node)]
 
         # Handle all defective syndrome.
         for node in defective_syndromes:
@@ -244,15 +246,17 @@ class Adapter:
 
         # Disabled syndrome and its neighbors. According to https://arxiv.org/ftp/arxiv/papers/1208/1208.0928.pdf
         cls._disable_node(node)
+        cls._internal_disalbed_recorder.append(node)
         for neighbor in cls._get_undisabled_neighbors(node):
             cls._disable_node(neighbor)
+            cls._internal_disalbed_recorder.append(neighbor)
 
     @classmethod
     def _internal_defective_data_handler(cls):
         """Handle internal defective data."""
 
         # Get all defective data undisabled.
-        defective_data = [node for node in cls.device.graph.nodes if cls._get_node_type(node) == 'D' and cls._is_defective_node(node) and not cls._is_disabled_node(node)]
+        defective_data = [node for node in cls._device.graph.nodes if cls._get_node_type(node) == 'D' and cls._is_defective_node(node) and not cls._is_disabled_node(node)]
 
         # Handle all defective data.
         for node in defective_data:
@@ -267,13 +271,14 @@ class Adapter:
 
         # Disable data only.
         cls._disable_node(node)
+        cls._internal_disalbed_recorder.append(node)
 
     @classmethod
     def _internal_defective_edge_handler(cls):
         """Handle internal defective edge."""
 
         # Get all defective edge with 2 undisabled nodes.
-        defective_edges = [(node1, node2) for node1, node2 in cls.device.graph.edges if cls._is_defective_edge(node1, node2) and not cls._is_disabled_node(node1) and not cls._is_disabled_node(node2)]
+        defective_edges = [(node1, node2) for node1, node2 in cls._device.graph.edges if cls._is_defective_edge(node1, node2) and not cls._is_disabled_node(node1) and not cls._is_disabled_node(node2)]
 
         # Handle all defective edge.
         for node1, node2 in defective_edges:
@@ -291,12 +296,29 @@ class Adapter:
         for node in [node1, node2]:
             if cls._get_node_type(node) == 'D' and not cls._is_disabled_node(node):
                 cls._disable_node(node)
+                cls._internal_disalbed_recorder.append(node)
 
     @classmethod
     def _search_stabilizers(cls):
         """Search for stabilizers, including super stabilizers. """
+        for internal_disabled_node in cls._internal_disalbed_recorder:
+            cls._search_stabilizers_from_node(internal_disabled_node)
 
-        pass
+    @classmethod
+    def _search_stabilizers_from_node(cls, node: tuple):
+        """Search for stabilizers from a node.
+            Args:
+                node: The node to search from.
+        """
+
+    @classmethod
+    def _stabilizer_search_graph(cls):
+        """Create a stabilizer search graph, only contains disabled nodes and edges between them. 
+            Returns:
+                A stabilizer search graph."""
+
+        
+        
 
     # Utility functions.
 
@@ -323,7 +345,7 @@ class Adapter:
                 A list of undisabled neighbors.
         """
 
-        return [neighbor for neighbor in cls.device.graph.neighbors(node) if not cls._is_disabled_node(neighbor)]
+        return [neighbor for neighbor in cls._device.graph.neighbors(node) if not cls._is_disabled_node(neighbor)]
 
     @classmethod
     def _is_defective_node(cls, node: tuple) -> bool:
@@ -335,7 +357,7 @@ class Adapter:
                 True if the node is defective, False otherwise.
         """
 
-        return cls.device.graph.nodes[node]['defective']
+        return cls._device.graph.nodes[node]['defective']
 
     @classmethod
     def _is_defective_edge(cls, node1: tuple, node2: tuple) -> bool:
@@ -348,7 +370,7 @@ class Adapter:
                 True if the edge is defective, False otherwise.
         """
 
-        return cls.device.graph.edges[node1, node2]['defective']
+        return cls._device.graph.edges[node1, node2]['defective']
 
     @classmethod
     def _is_disabled_node(cls, node: tuple) -> bool:
@@ -372,7 +394,7 @@ class Adapter:
                 A node type.
         """
 
-        return cls.device.graph.nodes[node]['name'][0]
+        return cls._device.graph.nodes[node]['name'][0]
 
     @classmethod
     def _get_boundary(cls, boundary_type: BoundaryType) -> Boundary:
@@ -417,7 +439,7 @@ class Adapter:
                 A list of XT boundary nodes.
         """
 
-        return [node for node in cls.device.graph.nodes if node[1] == 2*cls.device.data_height-1]
+        return [node for node in cls._device.graph.nodes if node[1] == 2*cls._device.data_height-1]
 
     @classmethod
     def _get_xb_boundary_nodes(cls) -> List:
@@ -426,7 +448,7 @@ class Adapter:
                 A list of XB boundary nodes.
         """
 
-        return [node for node in cls.device.graph.nodes if node[1] == 1]
+        return [node for node in cls._device.graph.nodes if node[1] == 1]
 
     @classmethod
     def _get_zl_boundary_nodes(cls) -> List:
@@ -435,7 +457,7 @@ class Adapter:
                 A list of ZL boundary nodes.
         """
 
-        return [node for node in cls.device.graph.nodes if node[0] == 1]
+        return [node for node in cls._device.graph.nodes if node[0] == 1]
 
     @classmethod
     def _get_zr_boundary_nodes(cls) -> List:
@@ -444,7 +466,7 @@ class Adapter:
                 A list of ZR boundary nodes.
         """
 
-        return [node for node in cls.device.graph.nodes if node[0] == 2*cls.device.data_width-1]
+        return [node for node in cls._device.graph.nodes if node[0] == 2*cls._device.data_width-1]
 
     @classmethod
     def _get_boundary_node_type(cls, node: tuple) -> BoundaryNodeType:
@@ -456,13 +478,13 @@ class Adapter:
                 A node boundary type, C for corner, the node is in both X and Z.
         """
         # If node in x boundary and z boundary, its corner.
-        if node in cls.boundaries[BoundaryType.XT].nodes + cls.boundaries[BoundaryType.XB].nodes and node in cls.boundaries[BoundaryType.ZL].nodes + cls.boundaries[BoundaryType.ZR].nodes:
+        if node in cls._boundaries[BoundaryType.XT].nodes + cls._boundaries[BoundaryType.XB].nodes and node in cls._boundaries[BoundaryType.ZL].nodes + cls._boundaries[BoundaryType.ZR].nodes:
             return BoundaryNodeType.C
         # If node in x boundary, its x.
-        elif node in cls.boundaries[BoundaryType.XT].nodes + cls.boundaries[BoundaryType.XB].nodes:
+        elif node in cls._boundaries[BoundaryType.XT].nodes + cls._boundaries[BoundaryType.XB].nodes:
             return BoundaryNodeType.X
         # If node in z boundary, its z.
-        elif node in cls.boundaries[BoundaryType.ZL].nodes + cls.boundaries[BoundaryType.ZR].nodes:
+        elif node in cls._boundaries[BoundaryType.ZL].nodes + cls._boundaries[BoundaryType.ZR].nodes:
             return BoundaryNodeType.Z
         # If node not in any boundary, its not boundary.
         else:
