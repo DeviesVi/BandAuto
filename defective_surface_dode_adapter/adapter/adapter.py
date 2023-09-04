@@ -211,6 +211,93 @@ class Adapter:
         # If does not match any type, its N type.
         return BoundaryNodeType.N
 
+    @classmethod
+    def _interal_defect_handler(cls):
+        """Handle internal defects."""
+
+        # Handle internal defective syndrome.
+        cls._internal_defective_syndrome_handler()
+
+        # Handle internal defective data.
+        cls._internal_defective_data_handler()
+
+        # Handle internal defective edge.
+        cls._internal_defective_edge_handler()
+
+    @classmethod
+    def _internal_defective_syndrome_handler(cls):
+        """Handle internal defective syndrome."""
+
+        # Get all defective syndrome undisabled.
+        defective_syndromes = [node for node in cls.device.graph.nodes if (cls._get_node_type(node) == 'X' or cls._get_node_type(node) == 'Z') and cls._is_defective_node(node) and not cls._is_disabled_node(node)]
+
+        # Handle all defective syndrome.
+        for node in defective_syndromes:
+            cls._internal_defective_syndrome_node_handler(node)
+
+    @classmethod
+    def _internal_defective_syndrome_node_handler(cls, node: tuple):
+        """Handle internal defective syndrome node.
+            Args:
+                node: The node to handle.
+        """
+
+        # Disabled syndrome and its neighbors. According to https://arxiv.org/ftp/arxiv/papers/1208/1208.0928.pdf
+        cls._disable_node(node)
+        for neighbor in cls._get_undisabled_neighbors(node):
+            cls._disable_node(neighbor)
+
+    @classmethod
+    def _internal_defective_data_handler(cls):
+        """Handle internal defective data."""
+
+        # Get all defective data undisabled.
+        defective_data = [node for node in cls.device.graph.nodes if cls._get_node_type(node) == 'D' and cls._is_defective_node(node) and not cls._is_disabled_node(node)]
+
+        # Handle all defective data.
+        for node in defective_data:
+            cls._internal_defective_data_node_handler(node)
+        
+    @classmethod
+    def _internal_defective_data_node_handler(cls, node: tuple):
+        """Handle internal defective data node.
+            Args:
+                node: The node to handle.
+        """
+
+        # Disable data only.
+        cls._disable_node(node)
+
+    @classmethod
+    def _internal_defective_edge_handler(cls):
+        """Handle internal defective edge."""
+
+        # Get all defective edge with 2 undisabled nodes.
+        defective_edges = [(node1, node2) for node1, node2 in cls.device.graph.edges if cls._is_defective_edge(node1, node2) and not cls._is_disabled_node(node1) and not cls._is_disabled_node(node2)]
+
+        # Handle all defective edge.
+        for node1, node2 in defective_edges:
+            cls._internal_defective_edge_node_handler(node1, node2)
+
+    @classmethod
+    def _internal_defective_edge_node_handler(cls, node1: tuple, node2: tuple):
+        """Handle internal defective edge node.
+            Args:
+                node1: The first node of the edge.
+                node2: The second node of the edge.
+        """
+
+        # Disable the data node.
+        for node in [node1, node2]:
+            if cls._get_node_type(node) == 'D' and not cls._is_disabled_node(node):
+                cls._disable_node(node)
+
+    @classmethod
+    def _search_stabilizers(cls):
+        """Search for stabilizers, including super stabilizers. """
+
+        pass
+
     # Utility functions.
 
     @classmethod
@@ -380,91 +467,3 @@ class Adapter:
         # If node not in any boundary, its not boundary.
         else:
             return BoundaryNodeType.N
-
-    @classmethod
-    def _interal_defect_handler(cls):
-        """Handle internal defects."""
-
-        # Handle internal defective syndrome.
-        cls._internal_defective_syndrome_handler()
-
-        # Handle internal defective data.
-        cls._internal_defective_data_handler()
-
-        # Handle internal defective edge.
-        cls._internal_defective_edge_handler()
-
-    @classmethod
-    def _internal_defective_syndrome_handler(cls):
-        """Handle internal defective syndrome."""
-
-        # Get all defective syndrome undisabled.
-        defective_syndromes = [node for node in cls.device.graph.nodes if (cls._get_node_type(node) == 'X' or cls._get_node_type(node) == 'Z') and cls._is_defective_node(node) and not cls._is_disabled_node(node)]
-
-        # Handle all defective syndrome.
-        for node in defective_syndromes:
-            cls._internal_defective_syndrome_node_handler(node)
-
-    @classmethod
-    def _internal_defective_syndrome_node_handler(cls, node: tuple):
-        """Handle internal defective syndrome node.
-            Args:
-                node: The node to handle.
-        """
-
-        # Disabled syndrome and its neighbors. According to https://arxiv.org/ftp/arxiv/papers/1208/1208.0928.pdf
-        cls._disable_node(node)
-        for neighbor in cls._get_undisabled_neighbors(node):
-            cls._disable_node(neighbor)
-
-    @classmethod
-    def _internal_defective_data_handler(cls):
-        """Handle internal defective data."""
-
-        # Get all defective data undisabled.
-        defective_data = [node for node in cls.device.graph.nodes if cls._get_node_type(node) == 'D' and cls._is_defective_node(node) and not cls._is_disabled_node(node)]
-
-        # Handle all defective data.
-        for node in defective_data:
-            cls._internal_defective_data_node_handler(node)
-        
-    @classmethod
-    def _internal_defective_data_node_handler(cls, node: tuple):
-        """Handle internal defective data node.
-            Args:
-                node: The node to handle.
-        """
-
-        # Disable data only.
-        cls._disable_node(node)
-
-    @classmethod
-    def _internal_defective_edge_handler(cls):
-        """Handle internal defective edge."""
-
-        # Get all defective edge with 2 undisabled nodes.
-        defective_edges = [(node1, node2) for node1, node2 in cls.device.graph.edges if cls._is_defective_edge(node1, node2) and not cls._is_disabled_node(node1) and not cls._is_disabled_node(node2)]
-
-        # Handle all defective edge.
-        for node1, node2 in defective_edges:
-            cls._internal_defective_edge_node_handler(node1, node2)
-
-    @classmethod
-    def _internal_defective_edge_node_handler(cls, node1: tuple, node2: tuple):
-        """Handle internal defective edge node.
-            Args:
-                node1: The first node of the edge.
-                node2: The second node of the edge.
-        """
-
-        # Disable the data node.
-        if cls._get_node_type(node1) == 'D':
-            cls._disable_node(node1)
-        elif cls._get_node_type(node2) == 'D':
-            cls._disable_node(node2)
-
-    @classmethod
-    def _search_stabilizers(cls):
-        """Search for stabilizers, including super stabilizers. """
-
-        pass
