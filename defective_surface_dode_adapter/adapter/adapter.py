@@ -160,7 +160,9 @@ class Adapter:
 
         # If frontier type not match current boundary type, its unsafe.
         if cls._frontier_boundary_type(frontier) != boudnary_node.node_type:
-            return False
+            # If frontier type is not C its unsafe. (C type can be any type)
+            if cls._frontier_boundary_type(frontier) != BoundaryNodeType.C:
+                return False
 
         # If all check passed, its safe.
         return True
@@ -200,7 +202,9 @@ class Adapter:
         if len(node_types) == 2:
             # If Z equal to X, its C type.
             if node_types.count('Z') == node_types.count('X'):
-                return BoundaryNodeType.C
+                # If the two neighbors one has 2 undisabled neighbors, its C type.
+                if len(cls._get_undisabled_neighbors(frontier[0])) == 2 or len(cls._get_undisabled_neighbors(frontier[1])) == 2:
+                    return BoundaryNodeType.C
 
         # If does not match any type, its N type.
         return BoundaryNodeType.N

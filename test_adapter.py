@@ -8,6 +8,8 @@ coupler_defect_rate = 0.01
 
 device = Device(25, 25)
 device.add_random_defect(qubit_defect_rate, coupler_defect_rate)
+device.save('device.pkl')
+# device = Device.load('device.pkl')
 result = Adapter.adapt_device(device)
 
 plt.subplot(121)
