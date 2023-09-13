@@ -28,5 +28,8 @@ class BoundaryNode:
 
 @dataclasses.dataclass
 class Boundary:
-    nodes: List
+    nodes: set
     boundary_type: BoundaryType
+
+    def add_node(self, node: tuple):
+        self.nodes.add(node)
