@@ -146,11 +146,10 @@ class Adapter:
         # Get all undisabled neighbors as new data.
         new_data = cls._get_undisabled_neighbors(syndrome)
 
-        # Add new data to involved boundaries if the data has less than 4 neighbors. data has 4 neighbors means its internal data.
+        # Add new data to involved boundaries.
         for data in new_data:
-            if len(cls._get_frontier(data)) < 4:
-                for boundary_type in involved_boundaries:
-                    cls._boundaries[boundary_type].add_node(data)
+            for boundary_type in involved_boundaries:
+                cls._boundaries[boundary_type].add_node(data)
 
 
     @classmethod
