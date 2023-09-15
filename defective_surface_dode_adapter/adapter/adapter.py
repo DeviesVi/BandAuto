@@ -83,10 +83,10 @@ class Adapter:
 
         cls._disable_node(node)
         # Handle neighbor syndromes in frontier.
-        cls._frontier_handler(node)
+        cls._frontier_cleaner(node)
 
     @classmethod
-    def _frontier_handler(cls, node: tuple):
+    def _frontier_cleaner(cls, node: tuple):
         """Handle frontier.
             Args:
                 node: The node to handle.
