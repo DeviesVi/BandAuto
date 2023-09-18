@@ -217,8 +217,6 @@ class Adapter:
     def _interal_defect_handler(cls):
         """Handle internal defects. If disabled internal node, record it."""
 
-        cls._internal_disalbed_recorder = []
-
         # Handle internal defective syndrome.
         cls._internal_defective_syndrome_handler()
 
@@ -227,6 +225,9 @@ class Adapter:
 
         # Handle internal defective edge.
         cls._internal_defective_edge_handler()
+
+        # Clean isolated syndrome.
+        cls._isolated_syndrome_cleaner()
 
     @classmethod
     def _internal_defective_syndrome_handler(cls):
@@ -248,10 +249,8 @@ class Adapter:
 
         # Disabled syndrome and its neighbors. According to https://arxiv.org/ftp/arxiv/papers/1208/1208.0928.pdf
         cls._disable_node(node)
-        cls._internal_disalbed_recorder.append(node)
         for neighbor in cls._get_undisabled_neighbors(node):
             cls._disable_node(neighbor)
-            cls._internal_disalbed_recorder.append(neighbor)
 
     @classmethod
     def _internal_defective_data_handler(cls):
@@ -273,7 +272,6 @@ class Adapter:
 
         # Disable data only.
         cls._disable_node(node)
-        cls._internal_disalbed_recorder.append(node)
 
     @classmethod
     def _internal_defective_edge_handler(cls):
@@ -298,26 +296,61 @@ class Adapter:
         for node in [node1, node2]:
             if cls._get_node_type(node) == 'D' and not cls._is_disabled_node(node):
                 cls._disable_node(node)
-                cls._internal_disalbed_recorder.append(node)
+
+    @classmethod
+    def _isolated_syndrome_cleaner(cls):
+        """Clean isolated syndrome."""
+
+        # Get all undisabled syndrome node has no undisabled neighbors.
+        isolated_syndromes = [node for node in cls._device.graph.nodes if (cls._get_node_type(node) == 'X' or cls._get_node_type(node) == 'Z') and not cls._is_disabled_node(node) and len(cls._get_undisabled_neighbors(node)) == 0]
+
+        # Disable all of them.
+        for node in isolated_syndromes:
+            cls._disable_node(node)
 
     @classmethod
     def _search_stabilizers(cls):
         """Search for stabilizers, including super stabilizers. """
-        for internal_disabled_node in cls._internal_disalbed_recorder:
-            cls._search_stabilizers_from_node(internal_disabled_node)
+
+        # Create stabilizer search graph.
+        cls._create_stabilizer_search_graph()
+        cls._visited_syndromes = set()
+
+        undisabled_syndromes = [node for node in cls._device.graph.nodes if (cls._get_node_type(node) == 'X' or cls._get_node_type(node) == 'Z') and not cls._is_disabled_node(node)]
+        for syndrome in undisabled_syndromes:
+            cls._search_stabilizers_from_syndrome(syndrome)
 
     @classmethod
-    def _search_stabilizers_from_node(cls, node: tuple):
-        """Search for stabilizers from a node.
+    def _search_stabilizers_from_syndrome(cls, node: tuple):
+        """Search for stabilizer from a syndrome node.
             Args:
-                node: The node to search from.
+                node: The syndrome node to search from.
         """
+        # Pair syndromes using stabilizer search graph's connected components.
+        # If a syndrome is already visited, skip it.
+        if node in cls._visited_syndromes:
+            return
 
-    @classmethod
-    def _stabilizer_search_graph(cls) -> nx.Graph:
-        pass
-
+        # Get all undisabled syndromes in the same connected component.
+        connected_component = [node for node in nx.node_connected_component(cls._stabilizer_search_graph, node) if not cls._is_disabled_node(node)]
+        cls.adapt_result['stabilizers'].append(connected_component)
+        cls._visited_syndromes |= set(connected_component)
         
+    @classmethod
+    def _create_stabilizer_search_graph(cls):
+        """Get stabilizer search graph.
+            Returns:
+                A stabilizer search graph.
+        """
+        cls._stabilizer_search_graph = nx.Graph()
+        cls._stabilizer_search_graph.add_nodes_from(cls._device.graph.nodes)
+
+        # Add edges between internal disabled data nodes and its neighbors.
+        # Get all internal disabled data nodes.
+        internal_disabled_data_nodes = [node for node in cls._device.graph.nodes if cls._get_node_type(node) == 'D' and cls._is_disabled_node(node) and cls._get_boundary_data_type(node) == BoundaryNodeType.N]
+
+        for node in internal_disabled_data_nodes:
+            cls._stabilizer_search_graph.add_edges_from([(node, neighbor) for neighbor in cls._device.graph.neighbors(node)])
         
 
     # Utility functions.
