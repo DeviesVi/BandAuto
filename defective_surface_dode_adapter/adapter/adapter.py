@@ -1,7 +1,7 @@
 """Main adapter module."""
 import networkx as nx
 from ..device import Device
-from typing import Dict, Union, List, Set
+from typing import Dict, Union, List, Set, Optional
 from .data import Boundary, BoundaryType, BoundaryNode, BoundaryNodeType
 from .exception import AdapterException
 
@@ -311,14 +311,16 @@ class Adapter:
     @classmethod
     def _search_stabilizers(cls):
         """Search for stabilizers, including super stabilizers. """
-
-        # Create stabilizer search graph.
-        cls._create_stabilizer_search_graph()
+        
         cls._visited_syndromes = set()
 
-        undisabled_syndromes = [node for node in cls._device.graph.nodes if (cls._get_node_type(node) == 'X' or cls._get_node_type(node) == 'Z') and not cls._is_disabled_node(node)]
-        for syndrome in undisabled_syndromes:
-            cls._search_stabilizers_from_syndrome(syndrome)
+        # Create stabilizer search graph.
+        for stabilizer_type in ['X', 'Z']:
+            cls._create_stabilizer_search_graph(stabilizer_type)
+
+            undisabled_syndromes = [node for node in cls._device.graph.nodes if cls._get_node_type(node) == stabilizer_type and not cls._is_disabled_node(node)]
+            for syndrome in undisabled_syndromes:
+                cls._search_stabilizers_from_syndrome(syndrome)
 
     @classmethod
     def _search_stabilizers_from_syndrome(cls, node: tuple):
@@ -337,20 +339,26 @@ class Adapter:
         cls._visited_syndromes |= set(connected_component)
         
     @classmethod
-    def _create_stabilizer_search_graph(cls):
+    def _create_stabilizer_search_graph(cls, stablizer_type: Optional[str] = None):
         """Get stabilizer search graph.
             Returns:
                 A stabilizer search graph.
         """
         cls._stabilizer_search_graph = nx.Graph()
-        cls._stabilizer_search_graph.add_nodes_from(cls._device.graph.nodes)
+        if stablizer_type is None:
+            cls._stabilizer_search_graph.add_nodes_from(cls._device.graph.nodes)
+        else:
+            cls._stabilizer_search_graph.add_nodes_from([node for node in cls._device.graph.nodes if cls._get_node_type(node) == stablizer_type])
 
         # Add edges between internal disabled data nodes and its neighbors.
         # Get all internal disabled data nodes.
         internal_disabled_data_nodes = [node for node in cls._device.graph.nodes if cls._get_node_type(node) == 'D' and cls._is_disabled_node(node) and cls._get_boundary_data_type(node) == BoundaryNodeType.N]
 
         for node in internal_disabled_data_nodes:
-            cls._stabilizer_search_graph.add_edges_from([(node, neighbor) for neighbor in cls._device.graph.neighbors(node)])
+            if stablizer_type is None:
+                cls._stabilizer_search_graph.add_edges_from([(node, neighbor) for neighbor in cls._device.graph.neighbors(node)])
+            else:
+                cls._stabilizer_search_graph.add_edges_from([(node, neighbor) for neighbor in cls._device.graph.neighbors(node) if cls._get_node_type(neighbor) == stablizer_type])
         
 
     # Utility functions.

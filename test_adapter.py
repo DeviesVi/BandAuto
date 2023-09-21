@@ -17,6 +17,8 @@ plot_graph(device.graph, [])
 plt.subplot(122)
 
 super_stabilizers = [stabilizer for stabilizer in result['stabilizers'] if len(stabilizer) > 1]
+print(super_stabilizers)
+
 super_stabilizer_nodes = [node for stabilizer in super_stabilizers for node in stabilizer]
 
 plot_graph(device.graph, result['disabled_nodes'], super_stabilizer_nodes = super_stabilizer_nodes)
