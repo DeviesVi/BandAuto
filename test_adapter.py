@@ -21,6 +21,9 @@ print(super_stabilizers)
 
 super_stabilizer_nodes = [node for stabilizer in super_stabilizers for node in stabilizer]
 
-plot_graph(device.graph, result['disabled_nodes'], super_stabilizer_nodes = super_stabilizer_nodes)
+logical_operator_nodes = result['logical_x_data_qubits'] + result['logical_z_data_qubits']
+
+plot_graph(device.graph, result['disabled_nodes'], logical_operator_nodes = logical_operator_nodes)
+
 
 plt.show()

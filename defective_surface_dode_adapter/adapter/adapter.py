@@ -35,6 +35,7 @@ class Adapter:
         cls._boundary_deformation()
         cls._interal_defect_handler()
         cls._search_stabilizers()
+        cls._place_logical_operator()
 
         return cls.adapt_result
 
@@ -360,6 +361,76 @@ class Adapter:
             else:
                 cls._stabilizer_search_graph.add_edges_from([(node, neighbor) for neighbor in cls._device.graph.neighbors(node) if cls._get_node_type(neighbor) == stablizer_type])
         
+    @classmethod
+    def _place_logical_operator(cls):
+        """Place logical operator. """
+        for operator_type in ['X', 'Z']:
+            cls._create_logical_operator_search_graph(operator_type)
+            cls._search_logical_operator(operator_type)
+
+    @classmethod
+    def _search_logical_operator(cls, operator_type: str):
+        """Search for logical operator. """
+        if operator_type == 'X':
+            # Create logical operator search graph.
+            cls._create_logical_operator_search_graph(operator_type)
+            # Search the shortest path from XT to XB.
+            # Get undisabled XT and XB nodes.
+            xt_nodes = [node for node in cls._logical_operator_search_graph.nodes if node in cls._boundaries[BoundaryType.XT].nodes and not cls._is_disabled_node(node)]
+            xb_nodes = [node for node in cls._logical_operator_search_graph.nodes if node in cls._boundaries[BoundaryType.XB].nodes and not cls._is_disabled_node(node)]
+            # Find the shortest path.
+            shortest_path = cls._find_shortest_path(cls._logical_operator_search_graph, set(xt_nodes), set(xb_nodes))
+            # If no path, raise exception.
+            if shortest_path is None:
+                raise AdapterException('No path from XT to XB.')
+        if operator_type == 'Z':
+            # Create logical operator search graph.
+            cls._create_logical_operator_search_graph(operator_type)
+            # Search the shortest path from ZL to ZR.
+            # Get undisabled ZL and ZR nodes.
+            zl_nodes = [node for node in cls._logical_operator_search_graph.nodes if node in cls._boundaries[BoundaryType.ZL].nodes and not cls._is_disabled_node(node)]
+            zr_nodes = [node for node in cls._logical_operator_search_graph.nodes if node in cls._boundaries[BoundaryType.ZR].nodes and not cls._is_disabled_node(node)]
+            # Find the shortest path.
+            shortest_path = cls._find_shortest_path(cls._logical_operator_search_graph, set(zl_nodes), set(zr_nodes))
+            # If no path, raise exception.
+            if shortest_path is None:
+                raise AdapterException('No path from ZL to ZR.')
+            
+        # Return all the data nodes in the shortest path.
+        cls.adapt_result[f'logical_{operator_type.lower()}_data_qubits'] = [node for node in shortest_path if cls._get_node_type(node) == 'D']
+
+    @classmethod
+    def _create_logical_operator_search_graph(cls, operator_type: str):
+        """Create logical operator search graph. """
+        # A logical operator search graph is a subgraph with all undisabled data nodes and undisabled opposite type syndrome nodes.
+        if operator_type == 'X':
+            syndrome_type = 'Z'
+        elif operator_type == 'Z':
+            syndrome_type = 'X'
+        
+        cls._logical_operator_search_graph = nx.Graph()
+        cls._logical_operator_search_graph.add_nodes_from([node for node in cls._device.graph.nodes if cls._get_node_type(node) == 'D' and not cls._is_disabled_node(node)])
+        cls._logical_operator_search_graph.add_nodes_from([node for node in cls._device.graph.nodes if cls._get_node_type(node) == syndrome_type and not cls._is_disabled_node(node)])
+
+        # Add edges to search graph if the edge in original graph.
+        for node1, node2 in cls._device.graph.edges:
+            if node1 in cls._logical_operator_search_graph.nodes and node2 in cls._logical_operator_search_graph.nodes:
+                cls._logical_operator_search_graph.add_edge(node1, node2)
+
+    @classmethod
+    def _find_shortest_path(cls, graph: nx.Graph, source: Set[tuple], target: Set[tuple]):
+        """Find the shortest path between two boundaries. """
+        shortest_path = None
+        for source_node in source:
+            for target_node in target:
+                try:
+                    path = nx.shortest_path(graph, source=source_node, target=target_node)
+                except(nx.NetworkXNoPath):
+                    continue
+                if shortest_path is None or len(path) < len(shortest_path):
+                    shortest_path = path
+        
+        return shortest_path
 
     # Utility functions.
 

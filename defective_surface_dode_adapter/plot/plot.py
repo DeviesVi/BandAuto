@@ -3,12 +3,18 @@ import matplotlib.pyplot as plt
 from typing import List
 
 
-def plot_graph(graph: nx.Graph, disabled_nodes: List[tuple], super_stabilizer_nodes: List[tuple] = []):
+def plot_graph(
+    graph: nx.Graph,
+    disabled_nodes: List[tuple],
+    super_stabilizer_nodes: List[tuple] = [],
+    logical_operator_nodes: List[tuple] = []
+):
 
     # Set node color. Black for disabled node, red for defective node, yellow for x syndrome node, green for z syndrome node, blue for data node.
     node_color = [
         '#000000' if node in disabled_nodes
         else '#8e44ad' if node in super_stabilizer_nodes
+        else '#964B00' if node in logical_operator_nodes
         else '#fa0000' if graph.nodes[node]['defective'] == True
         else '#ffb803' if graph.nodes[node]['name'][0] == 'X'
         else '#03ff42' if graph.nodes[node]['name'][0] == 'Z'
