@@ -1,7 +1,7 @@
-from defective_surface_dode_adapter.adapter import Adapter
-from defective_surface_dode_adapter.device import Device
+from defective_surface_code_adapter.adapter import Adapter
+from defective_surface_code_adapter.device import Device
 import matplotlib.pyplot as plt
-from defective_surface_dode_adapter.plot import plot_graph
+from defective_surface_code_adapter.plot import plot_graph
 
 qubit_defect_rate = 0.005
 coupler_defect_rate = 0.005
