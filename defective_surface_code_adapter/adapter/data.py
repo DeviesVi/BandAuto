@@ -22,14 +22,25 @@ class BoundaryNodeType(enum.Enum):
     N = 3 # Not boundary
 
 @dataclasses.dataclass
-class BoundaryNode:
-    node: tuple
-    node_type: BoundaryNodeType
-
-@dataclasses.dataclass
 class Boundary:
     nodes: set
     boundary_type: BoundaryType
 
     def add_node(self, node: tuple):
         self.nodes.add(node)
+
+@dataclasses.dataclass
+class AdaptResult:
+    disabled_nodes: List[tuple]
+    stabilizers: List[List[tuple]]
+    logical_x_data_qubits: List[tuple]
+    logical_z_data_qubits: List[tuple]
+
+    @staticmethod
+    def from_dict(d: dict):
+        return AdaptResult(
+            disabled_nodes=d['disabled_nodes'],
+            stabilizers=d['stabilizers'],
+            logical_x_data_qubits=d['logical_x_data_qubits'],
+            logical_z_data_qubits=d['logical_z_data_qubits']
+        )

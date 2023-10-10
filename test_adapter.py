@@ -16,14 +16,14 @@ plt.subplot(121)
 plot_graph(device.graph, [])
 plt.subplot(122)
 
-super_stabilizers = [stabilizer for stabilizer in result['stabilizers'] if len(stabilizer) > 1]
+super_stabilizers = [stabilizer for stabilizer in result.stabilizers if len(stabilizer) > 1]
 print(super_stabilizers)
 
 super_stabilizer_nodes = [node for stabilizer in super_stabilizers for node in stabilizer]
 
-logical_operator_nodes = result['logical_x_data_qubits'] + result['logical_z_data_qubits']
+logical_operator_nodes = result.logical_x_data_qubits + result.logical_z_data_qubits
 
-plot_graph(device.graph, result['disabled_nodes'], logical_operator_nodes = logical_operator_nodes)
+plot_graph(device.graph, result.disabled_nodes, logical_operator_nodes = logical_operator_nodes)
 
 
 plt.show()

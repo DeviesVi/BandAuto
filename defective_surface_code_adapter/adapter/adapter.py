@@ -2,7 +2,7 @@
 import networkx as nx
 from ..device import Device
 from typing import Dict, Union, List, Set, Optional
-from .data import Boundary, BoundaryType, BoundaryNode, BoundaryNodeType
+from .data import Boundary, BoundaryType, BoundaryNodeType, AdaptResult
 from .exception import AdapterException
 
 
@@ -10,7 +10,7 @@ class Adapter:
     """Adapter class for device."""
 
     @classmethod
-    def adapt_device(cls, device: Device) -> Dict[str, List]:
+    def adapt_device(cls, device: Device) -> AdaptResult:
         """Adapt a device.
             Args:
                 device: The device to adapt.
@@ -37,7 +37,7 @@ class Adapter:
         cls._search_stabilizers()
         cls._place_logical_operator()
 
-        return cls.adapt_result
+        return AdaptResult.from_dict(cls.adapt_result)
 
     @classmethod
     def _boundary_deformation(cls):
