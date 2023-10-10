@@ -28,6 +28,10 @@ class Adapter:
             'stabilizers': [],
             'logical_x_data_qubits': [],
             'logical_z_data_qubits': [],
+            'xt_boundary': [],
+            'xb_boundary': [],
+            'zl_boundary': [],
+            'zr_boundary': [],
         }
 
         cls._device = device
@@ -36,6 +40,7 @@ class Adapter:
         cls._interal_defect_handler()
         cls._search_stabilizers()
         cls._place_logical_operator()
+        cls._record_current_boundary()
 
         return AdaptResult.from_dict(cls.adapt_result)
 
@@ -431,6 +436,12 @@ class Adapter:
                     shortest_path = path
         
         return shortest_path
+
+    @classmethod
+    def _record_current_boundary(cls):
+        """Record current boundary. """
+        for boundary_type in BoundaryType:
+            cls.adapt_result[f'{boundary_type.name.lower()}_boundary'] = [node for node in cls._boundaries[boundary_type].nodes if not cls._is_disabled_node(node)]
 
     # Utility functions.
 

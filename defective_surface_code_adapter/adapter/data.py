@@ -35,6 +35,10 @@ class AdaptResult:
     stabilizers: List[List[tuple]]
     logical_x_data_qubits: List[tuple]
     logical_z_data_qubits: List[tuple]
+    xt_boundary: List[tuple]
+    xb_boundary: List[tuple]
+    zl_boundary: List[tuple]
+    zr_boundary: List[tuple]
 
     @staticmethod
     def from_dict(d: dict):
@@ -42,5 +46,9 @@ class AdaptResult:
             disabled_nodes=d['disabled_nodes'],
             stabilizers=d['stabilizers'],
             logical_x_data_qubits=d['logical_x_data_qubits'],
-            logical_z_data_qubits=d['logical_z_data_qubits']
+            logical_z_data_qubits=d['logical_z_data_qubits'],
+            xt_boundary=d['xt_boundary'],
+            xb_boundary=d['xb_boundary'],
+            zl_boundary=d['zl_boundary'],
+            zr_boundary=d['zr_boundary']
         )
