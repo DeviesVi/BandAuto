@@ -10,7 +10,7 @@ from .data import AnalysisResult
 
 class Analyzer:
     @classmethod
-    def analyze_device(cls, device: Device):
+    def analyze_device(cls, device: Device) -> AnalysisResult:
         """Analyze the device to get the two main factor of defective surface code"""
 
         cls._device = device
