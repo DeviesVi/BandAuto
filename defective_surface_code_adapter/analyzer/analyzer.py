@@ -16,16 +16,54 @@ class Analyzer:
         cls._device = device
         cls._adapt_result = Adapter.adapt_device(device=device)
 
-        for error_type in ['X', 'Z']:
-            cls._create_logical_error_search_graph(error_type=error_type)
-            if error_type == 'X':
-                x_shortest_distance, x_shortest_paths_count = cls._shortest_distance_and_path_count(G=cls._logical_operator_search_graph, sources=cls._adapt_result.xt_boundary, targets=cls._adapt_result.xb_boundary)
-            elif error_type == 'Z':
-                z_shortest_distance, z_shortest_paths_count = cls._shortest_distance_and_path_count(G=cls._logical_operator_search_graph, sources=cls._adapt_result.zl_boundary, targets=cls._adapt_result.zr_boundary)
-        return AnalysisResult(x_shortest_distance + 1, x_shortest_paths_count, z_shortest_distance + 1, z_shortest_paths_count)
+        x_shortest_distance, x_shortest_paths_count = cls._analyze_error_type('X')
+        z_shortest_distance, z_shortest_paths_count = cls._analyze_error_type('Z')
+        
+        return AnalysisResult(x_shortest_distance, x_shortest_paths_count, z_shortest_distance, z_shortest_paths_count)
     
     @classmethod
-    def _create_logical_error_search_graph(cls, error_type: str):
+    def _analyze_error_type(cls, error_type: str) -> Tuple[int, int]:
+        """Analyze the device to get the shortest distance and shortest paths count of error type.
+            Args:
+                error_type: The error type to analyze.
+
+            Returns:
+                A tuple of shortest distance and shortest paths count.
+        """
+
+        assert error_type in ['X', 'Z']
+
+        sources, targets = cls._get_sources_and_targets(error_type)
+
+        shortest_distance, shortest_paths_count = cls._shortest_distance_and_path_count(sources=sources, targets=targets, error_type=error_type)
+
+        return shortest_distance, shortest_paths_count
+    
+    @classmethod
+    def _get_sources_and_targets(cls, error_type: str) -> Tuple[List[tuple], List[tuple]]:
+        """Get sources and targets of error type.
+            Args:
+                error_type: The error type to get sources and targets.
+
+            Returns:
+                A tuple of sources and targets.
+        """
+
+        assert error_type in ['X', 'Z']
+
+        # If error type is X, sources is xt, targets is xb.
+        if error_type == 'X':
+            sources = cls._adapt_result.xt_boundary
+            targets = cls._adapt_result.xb_boundary
+        # If error type is Z, sources is zl, targets is zr.
+        elif error_type == 'Z':
+            sources = cls._adapt_result.zl_boundary
+            targets = cls._adapt_result.zr_boundary
+
+        return sources, targets
+
+    @classmethod
+    def _create_logical_error_search_graph(cls, sources: List[tuple], targets: List[tuple], error_type: str):
         """Create a graph to search for logical error. """
         if error_type == 'X':
             stabilizer_type = 'Z'
@@ -41,29 +79,33 @@ class Analyzer:
                 # Add edges between every data qubits.
                 cls._logical_operator_search_graph.add_edges_from([(data_qubits[i], data_qubits[j]) for i in range(len(data_qubits)) for j in range(i+1, len(data_qubits))])          
 
+        # Add start and end nodes.
+        cls._logical_operator_search_graph.add_nodes_from(['start', 'end'])
+        cls._logical_operator_search_graph.add_edges_from([('start', source) for source in sources])
+        cls._logical_operator_search_graph.add_edges_from([(target, 'end') for target in targets])
 
     @classmethod
-    def _shortest_distance_and_path_count(cls, G: nx.Graph, sources: List[tuple], targets: List[tuple]) -> Tuple[int, int]:
+    def _shortest_distance_and_path_count(cls, sources: List[tuple], targets: List[tuple], error_type: str) -> Tuple[int, int]:
         """Find shortest distance and shortest paths count between sources and targets in a undirected graph with all edges weight equal to 1.
             Args:
                 sources: The sources to find path.
                 targets: The targets to find path.
+                error_type: The error type to create logical error search graph.
 
             Returns:
                 A tuple of shortest distance and shortest paths count.
         """
-        shortest_paths = []
-        shortest_distance = np.inf
-        for source in sources:
-            for target in targets:
-                # Get shortest distance between source and target.
-                distance = nx.shortest_path_length(G=G, source=source, target=target)
-                if distance < shortest_distance:
-                    shortest_distance = distance
-                    shortest_paths = []
-                if distance == shortest_distance:
-                    shortest_paths += nx.all_shortest_paths(G=G, source=source, target=target)
+
+        assert error_type in ['X', 'Z']
+
+        cls._create_logical_error_search_graph(sources=sources, targets=targets, error_type=error_type)
+
+        # Get all shortest paths from start to end.
+        shortest_paths = nx.all_shortest_paths(cls._logical_operator_search_graph, source='start', target='end')
+        shortest_paths = list(shortest_paths)
         shortest_paths_count = len(shortest_paths)
+        shortest_distance = len(shortest_paths[0]) - 2 # minus start and end nodes.
+
         return shortest_distance, shortest_paths_count
 
     # Utility functions
