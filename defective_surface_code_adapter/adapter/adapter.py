@@ -425,17 +425,19 @@ class Adapter:
     @classmethod
     def _find_shortest_path(cls, graph: nx.Graph, source: Set[tuple], target: Set[tuple]):
         """Find the shortest path between two boundaries. """
-        shortest_path = None
-        for source_node in source:
-            for target_node in target:
-                try:
-                    path = nx.shortest_path(graph, source=source_node, target=target_node)
-                except(nx.NetworkXNoPath):
-                    continue
-                if shortest_path is None or len(path) < len(shortest_path):
-                    shortest_path = path
+        graph_ = graph.copy()
+        # Add start and end node.
+        graph_.add_nodes_from(['start', 'end'])
+        graph_.add_edges_from([('start', node) for node in source])
+        graph_.add_edges_from([(node, 'end') for node in target])
         
-        return shortest_path
+        # Find the shortest path.
+        try:
+            shortest_path = nx.shortest_path(graph_, 'start', 'end')
+        except nx.NetworkXNoPath:
+            return None
+        # Return shortest path without start and end node.
+        return shortest_path[1:-1]
 
     @classmethod
     def _record_current_boundary(cls):
