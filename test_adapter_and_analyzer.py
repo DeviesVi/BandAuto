@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 from defective_surface_code_adapter.plot import plot_graph
 from math import log
 
-qubit_defect_rate = 0.005
-coupler_defect_rate = 0.005
+qubit_defect_rate = 0.01
+coupler_defect_rate = 0.01
 
-device = Device(11, 11)
+device = Device(25, 25)
 device.add_random_defect(qubit_defect_rate, coupler_defect_rate)
 device.save('device.pkl')
 # device = Device.load('device.pkl')
