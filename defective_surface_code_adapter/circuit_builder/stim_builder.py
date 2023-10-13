@@ -2,13 +2,11 @@ import stim
 
 from ..adapter import Adapter
 from ..device import Device
-from .data import ConstructorOptions
+from data import BuilderOptions
+from base_builder import BaseBuilder
 
-class StimConstructor:
+class StimConstructor(BaseBuilder):
     """Construct stim circuit from input device. """
-
-    def construct(self):
-        """Construct stim circuit from input device."""
         
         
 

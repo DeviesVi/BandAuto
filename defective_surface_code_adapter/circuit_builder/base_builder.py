@@ -3,18 +3,21 @@
 from abc import ABC, abstractmethod
 
 from ..device import Device
-from .data import ConstructorOptions
 from ..adapter import Adapter
 
-class BaseConstructor(ABC):
+from data import BuilderOptions
+
+
+class BaseBuilder(ABC):
     """Base constructor to build circuits for the surface code."""
 
-    def __init__(self, device:Device, options: ConstructorOptions | None = None) -> None:
+    def __init__(self, device:Device, options: BuilderOptions | None = None) -> None:
         """Constructor."""
         self.device = device
+        self.adapt_result = Adapter.adapt_device(device)
 
         if options is None:
-            self.options = ConstructorOptions()
+            self.options = BuilderOptions()
         else:
             self.options = options
         

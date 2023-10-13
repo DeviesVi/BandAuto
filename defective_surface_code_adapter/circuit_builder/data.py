@@ -1,5 +1,5 @@
 import dataclasses
 
 @dataclasses.dataclass
-class ConstructorOptions:
+class BuilderOptions:
     pass
