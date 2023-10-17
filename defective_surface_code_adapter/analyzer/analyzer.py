@@ -125,8 +125,19 @@ class Analyzer:
         """
         data_qubits = []
         for syndrome in stabilizer:
-            data_qubits += [node for node in cls._device.graph.neighbors(syndrome) if cls._get_node_type(node) == 'D' and not cls._is_disabled_node(node)]
+            data_qubits += cls._data_in_syndrome(syndrome)
         return data_qubits
+
+    @classmethod
+    def _data_in_syndrome(cls, syndrome: tuple) -> List[tuple]:
+        """Get data qubits in syndrome.
+            Args:
+                syndrome: The syndrome to get data qubits.
+
+            Returns:
+                A list of undisabled data qubits neighbors to syndrome.
+        """
+        return [node for node in cls._device.graph.neighbors(syndrome) if cls._get_node_type(node) == 'D' and not cls._is_disabled_node(node)]
 
     @classmethod
     def _get_stabilizer_type(cls, stabilizer: List[tuple]) -> str:
@@ -137,7 +148,7 @@ class Analyzer:
             Returns:
                 A stabilizer type.
         """
-        return cls._device.graph.nodes[stabilizer[0]]['name'][0]
+        return cls._get_node_type(stabilizer[0])
 
     @classmethod
     def _get_node_type(cls, node: tuple) -> str:
