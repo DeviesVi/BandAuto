@@ -28,6 +28,9 @@ class Stabilizer:
 
         self.data_qubits = []
 
+    def __hash__(self) -> int:
+        return hash(self.id)
+
 class StabilizerGroup:
     """A stabilizer group consists of conflicting stabilizers."""
     stabilizer_groups_count = 0
@@ -38,3 +41,10 @@ class StabilizerGroup:
         StabilizerGroup.stabilizer_groups_count += 1
 
         self.stabilizers = stabilizers
+
+        self.max_holding_cycle_x = 0
+        self.max_holding_cycle_z = 0
+        self.current_holding_type = 'X'
+        self.remaining_holding_cycle = 0
+
+    
