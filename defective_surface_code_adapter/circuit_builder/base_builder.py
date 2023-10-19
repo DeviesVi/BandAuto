@@ -29,6 +29,8 @@ class BaseBuilder(ABC):
 
         self._data_qubits = [node for node in self.device.graph.nodes if self._get_node_type(node) == 'D' and not self._is_disabled_node(node)]
 
+        self.circuit = None
+
     def _prepare_stabilizers(self, stabilizers):      
         for stabilizer in stabilizers:
             # Prepare stabilizer
@@ -84,6 +86,8 @@ class BaseBuilder(ABC):
 
         assert initial_state in ['0', '1', '+', '-'], "Initial state must be one of '0', '1', '+', '-'"
 
+        self._initial_state = initial_state
+
         self._init_stabilizer_groups(initial_state)
 
         self.init_circuit()
@@ -91,13 +95,14 @@ class BaseBuilder(ABC):
 
         # Error correction cycle
         for i in range(ec_cycle):
-            self._build_single_cycle(i)
+            self._build_single_cycle(i, i == ec_cycle - 1)
 
-    def _build_single_cycle(self, current_cycle: int):
+        self.close_circuit()
+
+    def _build_single_cycle(self, current_cycle: int, is_last_cycle: bool = False):
         syndrome_for_cycle = self._gen_syndrome_for_cycle()
-        
-        self._data_qubit_basis = {data_qubit: 'Z' for data_qubit in self._data_qubits}
-        self._syndrome_basis = {syndrome: 'Z' for syndrome in syndrome_for_cycle}
+
+        self._basis = {**{data_qubit: 'Z' for data_qubit in self._data_qubits}, **{syndrome: 'Z' for syndrome in syndrome_for_cycle}}
 
         for pattern in range(4):
             self.barrier()
@@ -107,20 +112,43 @@ class BaseBuilder(ABC):
         # Return all syndrome to Z basis.
         self.barrier()
         for syndrome in syndrome_for_cycle:
-            if self._syndrome_basis[syndrome] == 'X':
-                self.unitary1(syndrome, 'X')
-                self._syndrome_basis[syndrome] = 'Z'
+            self._switch_basis(syndrome, 'Z')
         
+        # If is last cycle, switch all data qubits to basis according to initial state.
+        if is_last_cycle:
+            for data_qubit in self._data_qubits:
+                if self._initial_state in ['0', '1']:
+                    self._switch_basis(data_qubit, 'Z')
+                elif self._initial_state in ['+', '-']:
+                    self._switch_basis(data_qubit, 'X')
+        else:
+        # If not last cycle, switch all data qubits to Z basis.
+            for data_qubit in self._data_qubits:
+                self._switch_basis(data_qubit, 'Z')
+
         # Measure all syndrome.
         self.barrier()
         for syndrome in syndrome_for_cycle:
             self.measurement(syndrome)
+        
+        # If is last cycle, measure all data qubits.
+        if is_last_cycle:
+            for data_qubit in self._data_qubits:
+                self.measurement(data_qubit)
+
+        self.store_cycle_info(current_cycle)
 
     def _get_data_qubit(self, syndrome: tuple, pattern: int) -> tuple:
         """Get data qubit."""
         coord_offset = self._builder_options.syndrome_measurement_pattern[self._get_node_type(syndrome)][pattern]
         return (syndrome[0] + coord_offset[0], syndrome[1] + coord_offset[1])
         
+    def _switch_basis(self, node: tuple, target_basis: str):
+        if self._basis[node] == target_basis:
+            return
+        self.unitary1(node, target_basis)
+        self._basis[node] = target_basis
+
     def _couple_qubits(self, data_qubit: tuple, syndrome: tuple):
         """Couple data qubit to syndrome."""
         # If use CZ:
@@ -133,15 +161,11 @@ class BaseBuilder(ABC):
 
         if self._builder_options.u2gate == U2Gate.CZ:
             # Use u1 to switch basis.
-            if self._syndrome_basis[syndrome] == 'Z':
-                self.unitary1(syndrome, 'Z')
-                self._syndrome_basis[syndrome] = 'X'
-            if self._get_node_type(syndrome) == 'X' and self._data_qubit_basis[data_qubit] == 'Z':
-                self.unitary1(data_qubit, 'Z')
-                self._data_qubit_basis[data_qubit] = 'X'
-            elif self._get_node_type(syndrome) == 'Z' and self._data_qubit_basis[data_qubit] == 'X':
-                self.unitary1(data_qubit, 'X')
-                self._data_qubit_basis[data_qubit] = 'Z'
+            self._switch_basis(syndrome, 'X')
+            if self._get_node_type(syndrome) == 'X':
+                self._switch_basis(data_qubit, 'X')
+            elif self._get_node_type(syndrome) == 'Z':
+                self._switch_basis(data_qubit, 'Z')
             
             # Use u2 to couple.
             self.barrier()
@@ -149,12 +173,10 @@ class BaseBuilder(ABC):
 
         elif self._builder_options.u2gate == U2Gate.CNOT:
             # Use u1 to switch basis.
-            if self._get_node_type(syndrome) == 'X' and self._syndrome_basis[syndrome] == 'Z':
-                self.unitary1(syndrome, 'Z')
-                self._syndrome_basis[syndrome] = 'X'
-            elif self._get_node_type(syndrome) == 'Z' and self._syndrome_basis[syndrome] == 'X':
-                self.unitary1(syndrome, 'X')
-                self._syndrome_basis[syndrome] = 'Z'
+            if self._get_node_type(syndrome) == 'X':
+                self._switch_basis(syndrome, 'X')
+            elif self._get_node_type(syndrome) == 'Z':
+                self._switch_basis(syndrome, 'Z')
             
             # Use u2 to couple.
             self.barrier()
@@ -285,7 +307,7 @@ class BaseBuilder(ABC):
         pass
 
     @abstractmethod
-    def unitary1(self, dest, current_basis):
+    def unitary1(self, dest, target_basis):
         """Insert single qubit unitary, to switch X/Z basis."""
         pass
 
@@ -297,6 +319,10 @@ class BaseBuilder(ABC):
     @abstractmethod
     def measurement(self, dest):
         """Measure a qubit."""
+        pass
+
+    def store_cycle_info(self, current_cycle):
+        """Store cycle info."""
         pass
 
     @abstractmethod
