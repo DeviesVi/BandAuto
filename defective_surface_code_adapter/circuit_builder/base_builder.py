@@ -2,21 +2,25 @@
 
 from abc import ABC, abstractmethod
 from typing import List, Set
+from math import floor
 
 from ..device import Device
 from ..adapter import Adapter
 
-from data import BuilderOptions, Stabilizer, StabilizerGroup
+from data import BuilderOptions, Stabilizer, StabilizerGroup, HoldingCycleOption
 
 
 class BaseBuilder(ABC):
     """Base constructor to build circuits for the surface code."""
 
-    def __init__(self, device:Device) -> None:
+    def __init__(self, device:Device, builder_options: BuilderOptions | None = None) -> None:
         """Constructor."""
         self.device = device
         self.adapt_result = Adapter.adapt_device(device)
         self._stabilizers: List[Stabilizer] = []
+
+        if builder_options is None:
+            self._builder_options = BuilderOptions()
 
         # Builder preprocessing
         self._prepare_stabilizers(self.adapt_result.stabilizers)
@@ -45,7 +49,7 @@ class BaseBuilder(ABC):
     def _prepare_stabilizer_groups(self):
         """Prepare stabilizer groups."""
         self.visited_stabilizers = set()
-        self._stabilizer_groups = []
+        self._stabilizer_groups: List[StabilizerGroup] = []
         for stabilizer in self._stabilizers:
             if stabilizer not in self.visited_stabilizers:
                 stabilizer_group = self._prepare_stabilizer_group(stabilizer)
@@ -78,8 +82,40 @@ class BaseBuilder(ABC):
 
         assert initial_state in ['0', '1', '+', '-'], "Initial state must be one of '0', '1', '+', '-'"
 
+        self._init_stabilizer_groups(initial_state)
+
         self.init_circuit()
         self.state_preparation(initial_state)
+
+        # Error correction cycle
+        for i in range(ec_cycle):
+            self.build_single_cycle(i)
+
+    def build_single_cycle(self, current_cycle: int):
+        for stabilizer_group in self._stabilizer_groups:
+            pass
+
+
+    def _init_stabilizer_groups(self, initial_state):
+        """Initialize stabilizer groups."""
+        for stabilizer_group in self._stabilizer_groups:
+            if stabilizer_group.is_super_stabilizer:
+                stabilizer_group.current_holding_type = self._builder_options.first_cycle_super_stabilizer_type[initial_state]
+                if self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.MAX:
+                    x_weight = stabilizer_group.max_stabilizer_weight_x
+                    z_weight = stabilizer_group.max_stabilizer_weight_z
+                elif self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.MIN:
+                    x_weight = stabilizer_group.min_stabilizer_weight_x
+                    z_weight = stabilizer_group.min_stabilizer_weight_z
+                elif self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.AVG:
+                    x_weight = stabilizer_group.avg_stabilizer_weight_x
+                    z_weight = stabilizer_group.avg_stabilizer_weight_z
+                stabilizer_group.max_holding_cycle['X'] = floor(self._builder_options.stabilizer_group_holding_cycle_ratio * x_weight)
+                stabilizer_group.max_holding_cycle['Z'] = floor(self._builder_options.stabilizer_group_holding_cycle_ratio * z_weight)
+                stabilizer_group.remaining_holding_cycle = stabilizer_group.max_holding_cycle[stabilizer_group.current_holding_type]
+            else:
+                # Non-super stabilizer groups, do nothing.
+                pass
 
     # Utility methods
     def _is_disabled_node(self, node: tuple) -> bool:

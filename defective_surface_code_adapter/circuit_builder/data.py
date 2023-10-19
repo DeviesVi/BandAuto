@@ -1,5 +1,12 @@
 import dataclasses
 from typing import List
+from functools import cached_property
+from enum import Enum
+class HoldingCycleOption(Enum):
+    """Holding cycle options."""
+    MIN = 'min'
+    MAX = 'max'
+    AVG = 'avg'
 
 class BuilderOptions:
     """Options for the circuit builder."""
@@ -9,7 +16,9 @@ class BuilderOptions:
         '+': 'X',
         '-': 'X',
     }
-
+    stabilizer_group_holding_cycle_option = HoldingCycleOption.MAX
+    stabilizer_group_holding_cycle_ratio = 0.25
+    syndrome_reset = True
 
 class Stabilizer:
     """A stabilizer."""
@@ -42,9 +51,87 @@ class StabilizerGroup:
 
         self.stabilizers = stabilizers
 
-        self.max_holding_cycle_x = 0
-        self.max_holding_cycle_z = 0
+        # These property only used for super stabilizer groups.
+        self.max_holding_cycle = {
+            'X': 0,
+            'Z': 0,
+        }
         self.current_holding_type = 'X'
         self.remaining_holding_cycle = 0
 
+    def gen_stabilizers_for_1cycle(self):
+        # Get stabilizers for this cycle with same type as current holding type.
+        stabilizers = [stabilizer for stabilizer in self.stabilizers if stabilizer.stabilizer_type == self.current_holding_type]
+        self.remaining_holding_cycle -= 1
+
+        # If remaining holding cycle is 0, switch to another type.
+        if self.remaining_holding_cycle == 0:
+            self.current_holding_type = 'X' if self.current_holding_type == 'Z' else 'Z'
+            self.remaining_holding_cycle = self.max_holding_cycle[self.current_holding_type]
+
+        return stabilizers
+
+    @cached_property
+    def is_super_stabilizer(self) -> bool:
+        """Check if it is a super stabilizer."""
+        return len(self.stabilizers) > 1
+
+    @cached_property
+    def total_stabilizer_weight(self) -> int:
+        """Get total stabilizer weight."""
+        return sum([len(stabilizer.data_qubits) for stabilizer in self.stabilizers])
     
+    @cached_property
+    def total_stabilizer_weight_x(self) -> int:
+        """Get total stabilizer weight of X stabilizers."""
+        return sum([len(stabilizer.data_qubits) for stabilizer in self.stabilizers if stabilizer.stabilizer_type == 'X'])
+    
+    @cached_property
+    def total_stabilizer_weight_z(self) -> int:
+        """Get total stabilizer weight of Z stabilizers."""
+        return sum([len(stabilizer.data_qubits) for stabilizer in self.stabilizers if stabilizer.stabilizer_type == 'Z'])
+    
+    @cached_property
+    def max_stabilizer_weight(self) -> int:
+        """Get max stabilizer weight."""
+        return max([len(stabilizer.data_qubits) for stabilizer in self.stabilizers])
+    
+    @cached_property
+    def max_stabilizer_weight_x(self) -> int:
+        """Get max stabilizer weight of X stabilizers."""
+        return max([len(stabilizer.data_qubits) for stabilizer in self.stabilizers if stabilizer.stabilizer_type == 'X'])
+    
+    @cached_property
+    def max_stabilizer_weight_z(self) -> int:
+        """Get max stabilizer weight of Z stabilizers."""
+        return max([len(stabilizer.data_qubits) for stabilizer in self.stabilizers if stabilizer.stabilizer_type == 'Z'])
+    
+    @cached_property
+    def min_stabilizer_weight(self) -> int:
+        """Get min stabilizer weight."""
+        return min([len(stabilizer.data_qubits) for stabilizer in self.stabilizers])
+    
+    @cached_property
+    def min_stabilizer_weight_x(self) -> int:
+        """Get min stabilizer weight of X stabilizers."""
+        return min([len(stabilizer.data_qubits) for stabilizer in self.stabilizers if stabilizer.stabilizer_type == 'X'])
+    
+    @cached_property
+    def min_stabilizer_weight_z(self) -> int:
+        """Get min stabilizer weight of Z stabilizers."""
+        return min([len(stabilizer.data_qubits) for stabilizer in self.stabilizers if stabilizer.stabilizer_type == 'Z'])
+    
+    @cached_property
+    def avg_stabilizer_weight(self) -> int:
+        """Get avg stabilizer weight."""
+        return self.total_stabilizer_weight / len(self.stabilizers)
+    
+    @cached_property
+    def avg_stabilizer_weight_x(self) -> int:
+        """Get avg stabilizer weight of X stabilizers."""
+        return self.total_stabilizer_weight_x / len(self.stabilizers)
+    
+    @cached_property
+    def avg_stabilizer_weight_z(self) -> int:
+        """Get avg stabilizer weight of Z stabilizers."""
+        return self.total_stabilizer_weight_z / len(self.stabilizers)
