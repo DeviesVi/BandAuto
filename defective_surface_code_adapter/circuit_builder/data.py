@@ -8,8 +8,24 @@ class HoldingCycleOption(Enum):
     MAX = 'max'
     AVG = 'avg'
 
+class U1Gate(Enum):
+    """U1 gate options."""
+    H = 'H' # Hadamard
+    Y2 = 'Y2' # Y Pi/2 Rotation
+
+class U2Gate(Enum):
+    """U2 gate options."""
+    CZ = 'CZ'
+    CNOT = 'CNOT'
+
+@dataclasses.dataclass
 class BuilderOptions:
     """Options for the circuit builder."""
+    syndrome_measurement_pattern = {
+        'X':[[-1,1],[-1,-1],[1,1],[1,-1]],
+        'Z':[[-1,1],[1,1],[-1,-1],[1,-1]],
+    }
+    syndrome_reset = True
     first_cycle_super_stabilizer_type = {
         '0': 'Z',
         '1': 'Z',
@@ -18,7 +34,8 @@ class BuilderOptions:
     }
     stabilizer_group_holding_cycle_option = HoldingCycleOption.MAX
     stabilizer_group_holding_cycle_ratio = 0.25
-    syndrome_reset = True
+    u1gate = U1Gate.H
+    u2gate = U2Gate.CZ
 
 class Stabilizer:
     """A stabilizer."""
