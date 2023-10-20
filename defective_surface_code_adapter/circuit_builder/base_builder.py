@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Set
 from math import floor
+from functools import cached_property
 
 from ..device import Device
 from ..adapter import Adapter
@@ -26,8 +27,6 @@ class BaseBuilder(ABC):
         self._prepare_stabilizers(self.adapt_result.stabilizers)
         self._prepare_stabilizer_lookup_table()
         self._prepare_stabilizer_groups()
-
-        self._data_qubits = [node for node in self.device.graph.nodes if self._get_node_type(node) == 'D' and not self._is_disabled_node(node)]
 
         self.circuit = None
 
@@ -218,6 +217,41 @@ class BaseBuilder(ABC):
     def _is_disabled_node(self, node: tuple) -> bool:
         """Check if the node is disabled"""
         return node in self.adapt_result.disabled_nodes
+    
+    @cached_property
+    def _all_qubits(self) -> List[tuple]:
+        """Get all undisabled qubits."""
+        return [node for node in self.device.graph.nodes if not self._is_disabled_node(node)]
+    
+    @cached_property
+    def _data_qubits(self) -> List[tuple]:
+        """Get all undisabled data qubits."""
+        return [node for node in self.device.graph.nodes if self._get_node_type(node) == 'D' and not self._is_disabled_node(node)]
+    
+    @cached_property
+    def _syndromes(self) -> List[tuple]:
+        """Get all undisabled syndromes."""
+        return [node for node in self.device.graph.nodes if self._get_node_type(node) in ['X', 'Z'] and not self._is_disabled_node(node)]
+    
+    @cached_property
+    def _x_syndromes(self) -> List[tuple]:
+        """Get all undisabled X syndromes."""
+        return [node for node in self.device.graph.nodes if self._get_node_type(node) == 'X' and not self._is_disabled_node(node)]
+    
+    @cached_property
+    def _z_syndromes(self) -> List[tuple]:
+        """Get all undisabled Z syndromes."""
+        return [node for node in self.device.graph.nodes if self._get_node_type(node) == 'Z' and not self._is_disabled_node(node)]
+    
+    @cached_property
+    def _logical_x_data_qubits(self) -> List[tuple]:
+        """Get all logical X data qubits."""
+        return self.adapt_result.logical_x_data_qubits
+
+    @cached_property
+    def _logical_z_data_qubits(self) -> List[tuple]:
+        """Get all logical Z data qubits."""
+        return self.adapt_result.logical_z_data_qubits
 
     def _data_in_stabilizer(self, stabilizer: List[tuple]) -> List[tuple]:
         """Get data qubits in stabilizer.
