@@ -6,12 +6,14 @@ from ..adapter import Adapter
 from ..device import Device
 from data import BuilderOptions, U1Gate, U2Gate
 from base_builder import BaseBuilder
+from collections import defaultdict
 
 class StimConstructor(BaseBuilder):
     """Construct stim circuit from input device. """
     def __init__(self, device: Device, builder_options: BuilderOptions | None = None) -> None:
         super().__init__(device, builder_options)
         self._node_index = {}
+        self._measuremnt_record = []
 
     def init_circuit(self):
         self.circuit = ''
@@ -63,14 +65,28 @@ class StimConstructor(BaseBuilder):
         # Insert Error
         self.u2_error(targ, dest)
 
-    def measure(self, dest, target_basis):
+    def measure(self, dest):
+        self.circuit += f'M({self._builder_options.physical_errors.measurement}) {self._node_index[dest]}\n'
+        # Record measurements
+        self._measuremnt_record.append(dest)
+
+    def reset(self, dest):
+        self.circuit += f'R {self._node_index[dest]}\n'
+        self.reset_error(dest)
+
+    def start_cycle(self, current_cycle):
         pass
 
     def end_cycle(self, current_cycle):
-        pass
+        # Add idle error to all data qubits
+        for node in self._data_qubits:
+            self.data_idle_error(node)
 
     def close_circuit(self):
-        pass
+        """Generate detector and logical operator for stim circuit."""
+        for stabilizer_group in self._stabilizer_groups:
+            pass
+
 
     def barrier(self):
         self.circuit += 'TICK\n'
