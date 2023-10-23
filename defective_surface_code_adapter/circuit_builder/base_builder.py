@@ -135,7 +135,7 @@ class BaseBuilder(ABC):
             for data_qubit in self._data_qubits:
                 self.measurement(data_qubit)
 
-        self.store_cycle_info(current_cycle)
+        self.end_cycle(current_cycle)
 
     def _get_data_qubit(self, syndrome: tuple, pattern: int) -> tuple:
         """Get data qubit."""
@@ -355,7 +355,7 @@ class BaseBuilder(ABC):
         """Measure a qubit."""
         pass
 
-    def store_cycle_info(self, current_cycle):
+    def end_cycle(self, current_cycle):
         """Store cycle info."""
         pass
 

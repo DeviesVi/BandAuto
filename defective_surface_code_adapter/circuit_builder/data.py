@@ -19,6 +19,24 @@ class U2Gate(Enum):
     CNOT = 'CNOT'
 
 @dataclasses.dataclass
+class PhysicalErrors:
+    u1 = 1.09e-3
+    u2 = 6.05e-3
+    data_idle = 2.46e-2
+    reset = 1.86e-3
+    measurement = 1.96e-2
+
+    def get_ratio(self, ratio: float) -> 'PhysicalErrors':
+        """Get physical errors with ratio."""
+        return PhysicalErrors(
+            u1 = self.u1 * ratio,
+            u2 = self.u2 * ratio,
+            data_idle = self.data_idle * ratio,
+            reset = self.reset * ratio,
+            measurement = self.measurement * ratio,
+        )
+
+@dataclasses.dataclass
 class BuilderOptions:
     """Options for the circuit builder."""
     syndrome_measurement_pattern = {
@@ -36,6 +54,8 @@ class BuilderOptions:
     stabilizer_group_holding_cycle_ratio = 0.25
     u1gate = U1Gate.H
     u2gate = U2Gate.CZ
+
+    physical_errors = PhysicalErrors()
 
 class Stabilizer:
     """A stabilizer."""
