@@ -99,8 +99,10 @@ class BaseBuilder(ABC):
         self.close_circuit()
 
     def _build_single_cycle(self, current_cycle: int, is_last_cycle: bool = False):
-        self.start_cycle(current_cycle)
-
+        self._current_cycle = current_cycle
+        
+        self.start_cycle()
+        
         syndrome_for_cycle = self._gen_syndrome_for_cycle()
 
         self._basis = {**{data_qubit: 'Z' for data_qubit in self._data_qubits}, **{syndrome: 'Z' for syndrome in syndrome_for_cycle}}
@@ -131,7 +133,8 @@ class BaseBuilder(ABC):
         self.barrier()
         for syndrome in syndrome_for_cycle:
             self.measurement(syndrome)
-            self.reset(syndrome)
+            if self._builder_options.syndrome_reset:
+                self.reset(syndrome)
         
         # If is last cycle, measure all data qubits.
         if is_last_cycle:
@@ -362,11 +365,11 @@ class BaseBuilder(ABC):
         """Reset a qubit."""
         pass
 
-    def start_cycle(self, current_cycle: int):
+    def start_cycle(self):
         """Start of a cycle."""
         pass
 
-    def end_cycle(self, current_cycle: int):
+    def end_cycle(self):
         """End of a cycle."""
         pass
 

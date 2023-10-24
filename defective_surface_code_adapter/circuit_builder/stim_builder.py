@@ -1,10 +1,11 @@
 import stim
 
 from defective_surface_code_adapter.device import Device
+from typing import List
 
 from ..adapter import Adapter
 from ..device import Device
-from data import BuilderOptions, U1Gate, U2Gate
+from data import BuilderOptions, U1Gate, U2Gate, StabilizerGroup
 from base_builder import BaseBuilder
 from collections import defaultdict
 
@@ -68,16 +69,16 @@ class StimConstructor(BaseBuilder):
     def measure(self, dest):
         self.circuit += f'M({self._builder_options.physical_errors.measurement}) {self._node_index[dest]}\n'
         # Record measurements
-        self._measuremnt_record.append(dest)
+        self._measuremnt_record.append((dest, self._current_cycle))
 
     def reset(self, dest):
         self.circuit += f'R {self._node_index[dest]}\n'
         self.reset_error(dest)
 
-    def start_cycle(self, current_cycle):
+    def start_cycle(self):
         pass
 
-    def end_cycle(self, current_cycle):
+    def end_cycle(self):
         # Add idle error to all data qubits
         for node in self._data_qubits:
             self.data_idle_error(node)
@@ -85,8 +86,66 @@ class StimConstructor(BaseBuilder):
     def close_circuit(self):
         """Generate detector and logical operator for stim circuit."""
         for stabilizer_group in self._stabilizer_groups:
-            pass
+            if stabilizer_group.is_super_stabilizer:
+                self._super_stabilizer_detectors(stabilizer_group)
+            else:
+                self._normal_stabilizer_detectors(stabilizer_group)
+        
+        # Generate logical operator
+        self._logical_operators()
 
+    def _normal_stabilizer_detectors(self, stabilizer_group: StabilizerGroup):
+        """Generate detector for normal stabilizer."""
+        syndrome = stabilizer_group.stabilizers[0].syndromes[0]
+        record_pairs = self._consective_cycle_record_pairs(syndrome)
+        for pair in record_pairs:
+            self._write_detectors_by_records(pair)
+
+    def _super_stabilizer_detectors(self, stabilizer_group: StabilizerGroup):
+        """Generate detector for super stabilizer."""
+        for stabilizer in stabilizer_group.stabilizers:
+            # Handle consective detectors
+            for syndrome in stabilizer.syndromes:
+                record_pairs = self._consective_cycle_record_pairs(syndrome)
+                for pair in record_pairs:
+                    self._write_detectors_by_records(pair)
+            # Handle super stabilizer detectors
+
+
+    def _consective_cycle_record_pairs(self, node: tuple) -> List[List[int]]:
+        """Return a list of consective measurement records for a node."""
+        records = [[i - len(self._measuremnt_record), cycle] for i, (n, cycle) in enumerate(self._measuremnt_record) if n == node]
+
+        # Pair records that are in consecutive cycles
+        record_pairs = []
+
+        if self._builder_options.syndrome_reset:
+            for i in range(len(records) - 1):
+                if records[i][1] + 1 == records[i + 1][1]:
+                    record_pairs.append([records[i][0], records[i + 1][0]])
+        else:
+            for i in range(len(records) - 2):
+                if records[i][1] + 2 == records[i + 2][1]:
+                    record_pairs.append([records[i][0], records[i + 2][0]])
+        return record_pairs
+    
+
+    def _write_detectors_by_records(self, records: List[int]):
+        """Generate detectors by measurement records."""
+        self.circuit += 'DETECTOR'
+        for r in records:
+            self.circuit += f' rec[{r}]'
+        self.circuit += '\n'
+ 
+    def _starting_cycle_detectors(self):
+        pass
+
+    def _data_qubit_detectors(self):
+        pass
+    
+    def _logical_operators(self):
+        """Generate logical operator for circuit."""
+        pass
 
     def barrier(self):
         self.circuit += 'TICK\n'

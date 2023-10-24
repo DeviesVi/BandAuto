@@ -2,6 +2,11 @@ import dataclasses
 from typing import List
 from functools import cached_property
 from enum import Enum
+
+@dataclasses.dataclass
+class MeasurementRecord:
+    pass
+
 class HoldingCycleOption(Enum):
     """Holding cycle options."""
     MIN = 'min'
