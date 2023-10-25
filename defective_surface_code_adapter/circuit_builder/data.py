@@ -1,11 +1,8 @@
+from collections import defaultdict
 import dataclasses
-from typing import List
+from typing import List, Dict, DefaultDict
 from functools import cached_property
 from enum import Enum
-
-@dataclasses.dataclass
-class MeasurementRecord:
-    pass
 
 class HoldingCycleOption(Enum):
     """Holding cycle options."""
@@ -79,6 +76,11 @@ class Stabilizer:
 
         self.data_qubits = []
 
+    @cached_property
+    def is_super_stabilizer(self) -> bool:
+        """Check if it is a super stabilizer."""
+        return len(self.syndromes) > 1
+
     def __hash__(self) -> int:
         return hash(self.id)
 
@@ -103,7 +105,7 @@ class StabilizerGroup:
 
     def gen_stabilizers_for_1cycle(self):
         # Get stabilizers for this cycle with same type as current holding type.
-        stabilizers = [stabilizer for stabilizer in self.stabilizers if stabilizer.stabilizer_type == self.current_holding_type]
+        self._this_cycle_stabilizers = [stabilizer for stabilizer in self.stabilizers if stabilizer.stabilizer_type == self.current_holding_type]
         self.remaining_holding_cycle -= 1
 
         # If remaining holding cycle is 0, switch to another type.
@@ -111,10 +113,15 @@ class StabilizerGroup:
             self.current_holding_type = 'X' if self.current_holding_type == 'Z' else 'Z'
             self.remaining_holding_cycle = self.max_holding_cycle[self.current_holding_type]
 
-        return stabilizers
+        return self._this_cycle_stabilizers
+    
+    @property
+    def this_cycle_stabilizers(self) -> List[Stabilizer]:
+        """Get stabilizers for this cycle."""
+        return self._this_cycle_stabilizers
 
     @cached_property
-    def is_super_stabilizer(self) -> bool:
+    def is_super_stabilizer_group(self) -> bool:
         """Check if it is a super stabilizer."""
         return len(self.stabilizers) > 1
 
@@ -166,14 +173,38 @@ class StabilizerGroup:
     @cached_property
     def avg_stabilizer_weight(self) -> int:
         """Get avg stabilizer weight."""
-        return self.total_stabilizer_weight / len(self.stabilizers)
+        return self.total_stabilizer_weight // len(self.stabilizers)
     
     @cached_property
     def avg_stabilizer_weight_x(self) -> int:
         """Get avg stabilizer weight of X stabilizers."""
-        return self.total_stabilizer_weight_x / len(self.stabilizers)
+        return self.total_stabilizer_weight_x // len(self.stabilizers)
     
     @cached_property
     def avg_stabilizer_weight_z(self) -> int:
         """Get avg stabilizer weight of Z stabilizers."""
-        return self.total_stabilizer_weight_z / len(self.stabilizers)
+        return self.total_stabilizer_weight_z // len(self.stabilizers)
+    
+    
+@dataclasses.dataclass
+class MeasurementRecords:
+    @dataclasses.dataclass
+    class NodeRecord:
+        """A syndrome record."""
+        node: tuple
+        cycle: int
+
+        def __hash__(self) -> int:
+            return hash((self.node, self.cycle))
+
+    measurment_count: int = 0
+    node_measurment_index: Dict[NodeRecord, int] = {} 
+
+    def add_record(self, node: tuple, cycle: int):
+        """Add a measurement record."""
+        self.node_measurment_index[self.NodeRecord(node, cycle)] = MeasurementRecords.measurment_count
+        MeasurementRecords.measurment_count += 1
+
+    def stim_rec_index(self, node: tuple, cycle: int) -> int:
+        """Get stim record index."""
+        return self.node_measurment_index[self.NodeRecord(node, cycle)] - self.measurment_count

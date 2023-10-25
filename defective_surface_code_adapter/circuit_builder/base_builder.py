@@ -1,7 +1,7 @@
 """Base constructor to build circuits for the surface code."""
 
 from abc import ABC, abstractmethod
-from typing import List, Set
+from typing import List
 from math import floor
 from functools import cached_property
 
@@ -197,11 +197,12 @@ class BaseBuilder(ABC):
             stabilizers = stabilizer_group.gen_stabilizers_for_1cycle()
             for stabilizer in stabilizers:
                 syndrome_for_cycle += stabilizer.syndromes
+        return syndrome_for_cycle
 
     def _init_stabilizer_groups(self, initial_state):
         """Initialize stabilizer groups."""
         for stabilizer_group in self._stabilizer_groups:
-            if stabilizer_group.is_super_stabilizer:
+            if stabilizer_group.is_super_stabilizer_group:
                 stabilizer_group.current_holding_type = self._builder_options.first_cycle_super_stabilizer_type[initial_state]
                 if self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.MAX:
                     x_weight = stabilizer_group.max_stabilizer_weight_x
