@@ -8,7 +8,7 @@ from functools import cached_property
 from ..device import Device
 from ..adapter import Adapter
 
-from data import BuilderOptions, Stabilizer, StabilizerGroup, HoldingCycleOption, U2Gate
+from .data import BuilderOptions, Stabilizer, StabilizerGroup, HoldingCycleOption, U2Gate
 
 
 class BaseBuilder(ABC):
@@ -22,6 +22,8 @@ class BaseBuilder(ABC):
 
         if builder_options is None:
             self._builder_options = BuilderOptions()
+        else:
+            self._builder_options = builder_options
 
         # Builder preprocessing
         self._prepare_stabilizers(self.adapt_result.stabilizers)
@@ -39,14 +41,14 @@ class BaseBuilder(ABC):
         """Prepare a stabilizer."""
         stabilizer_ = Stabilizer(self._get_stabilizer_type(stabilizer), stabilizer)
         stabilizer_.data_qubits = self._data_in_stabilizer(stabilizer)
-        return Stabilizer
+        return stabilizer_
     
     def _prepare_stabilizer_lookup_table(self):
         """Prepare stabilizer lookup table."""
         self._stabilizer_lookup_table = {}
         # Lookup stabilizer by syndrome.
         for stabilizer in self._stabilizers:
-            for syndrome in stabilizer:
+            for syndrome in stabilizer.syndromes:
                 self._stabilizer_lookup_table[syndrome] = stabilizer
 
     def _prepare_stabilizer_groups(self):
@@ -80,12 +82,13 @@ class BaseBuilder(ABC):
         conflict_stabilizers = [self._stabilizer_lookup_table[syndrome] for syndrome in conflict_syndromes]
         return list(set(conflict_stabilizers))
 
-    def build(self, ec_cycle: int, initial_state: str):
+    def build(self, ec_cycle: int, initial_state: str) -> str:
         """Build the circuit."""
 
         assert initial_state in ['0', '1', '+', '-'], "Initial state must be one of '0', '1', '+', '-'"
 
         self._initial_state = initial_state
+        self._max_cycle = ec_cycle
 
         self._init_stabilizer_groups(initial_state)
 
@@ -94,13 +97,16 @@ class BaseBuilder(ABC):
 
         # Error correction cycle
         for i in range(ec_cycle):
-            self._build_single_cycle(i, i == ec_cycle - 1)
+            self._build_single_cycle(i)
 
         self.close_circuit()
 
-    def _build_single_cycle(self, current_cycle: int, is_last_cycle: bool = False):
+        return self.circuit
+
+    def _build_single_cycle(self, current_cycle: int):
         self._current_cycle = current_cycle
-        
+        self._is_last_cycle = self._current_cycle == self._max_cycle - 1
+
         self.start_cycle()
         
         syndrome_for_cycle = self._gen_syndrome_for_cycle()
@@ -118,7 +124,7 @@ class BaseBuilder(ABC):
             self._switch_basis(syndrome, 'Z')
         
         # If is last cycle, switch all data qubits to basis according to initial state.
-        if is_last_cycle:
+        if self._is_last_cycle:
             for data_qubit in self._data_qubits:
                 if self._initial_state in ['0', '1']:
                     self._switch_basis(data_qubit, 'Z')
@@ -137,16 +143,21 @@ class BaseBuilder(ABC):
                 self.reset(syndrome)
         
         # If is last cycle, measure all data qubits.
-        if is_last_cycle:
+        if self._is_last_cycle:
             for data_qubit in self._data_qubits:
                 self.measurement(data_qubit)
 
-        self.end_cycle(current_cycle)
+        self.end_cycle()
 
     def _get_data_qubit(self, syndrome: tuple, pattern: int) -> tuple:
         """Get data qubit."""
         coord_offset = self._builder_options.syndrome_measurement_pattern[self._get_node_type(syndrome)][pattern]
-        return (syndrome[0] + coord_offset[0], syndrome[1] + coord_offset[1])
+        data_qubit = (syndrome[0] + coord_offset[0], syndrome[1] + coord_offset[1])
+        if data_qubit not in self._data_qubits:
+            return None
+        if self._is_disabled_node(data_qubit):
+            return None
+        return data_qubit
         
     def _switch_basis(self, node: tuple, target_basis: str):
         if self._basis[node] == target_basis:
@@ -154,7 +165,7 @@ class BaseBuilder(ABC):
         self.unitary1(node, target_basis)
         self._basis[node] = target_basis
 
-    def _couple_qubits(self, data_qubit: tuple, syndrome: tuple):
+    def _couple_qubits(self, data_qubit: tuple | None, syndrome: tuple):
         """Couple data qubit to syndrome."""
         # If use CZ:
         # X syndrome: Syndrome in X basis, data qubit in X basis.
@@ -163,6 +174,9 @@ class BaseBuilder(ABC):
         # X syndrome: Syndrome in X basis, data qubit in Z basis.
         # Z syndrome: Syndrome in Z basis, data qubit in Z basis.
         #   CNOT direction: X -> D, Z <- D
+
+        if data_qubit is None:
+            return
 
         if self._builder_options.u2gate == U2Gate.CZ:
             # Use u1 to switch basis.
@@ -315,7 +329,12 @@ class BaseBuilder(ABC):
         # Get disabled data node of syndrome.
         disabled_data_nodes = [node for node in self.device.graph.neighbors(syndrome) if self._get_node_type(node) == 'D' and self._is_disabled_node(node)]
         # Get undisabled syndromes of disabled data nodes.
-        undisabled_syndromes = [node for node in self.device.graph.neighbors(disabled_data_nodes) if self._get_node_type(node) in ['X', 'Z'] and not self._is_disabled_node(node)]
+        undisabled_syndromes = [
+            node  
+            for disabled_data_node in disabled_data_nodes 
+            for node in self.device.graph.neighbors(disabled_data_node)
+            if self._get_node_type(node) in ['X', 'Z'] and not self._is_disabled_node(node)
+        ]
         # Get conflict syndromes.
         conflict_syndromes = [syndrome_ for syndrome_ in undisabled_syndromes if self._is_syndromes_conflict(syndrome, syndrome_)]
 

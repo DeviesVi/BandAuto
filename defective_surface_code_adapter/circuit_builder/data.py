@@ -104,15 +104,17 @@ class StabilizerGroup:
         self.remaining_holding_cycle = 0
 
     def gen_stabilizers_for_1cycle(self):
-        # Get stabilizers for this cycle with same type as current holding type.
-        self._this_cycle_stabilizers = [stabilizer for stabilizer in self.stabilizers if stabilizer.stabilizer_type == self.current_holding_type]
-        self.remaining_holding_cycle -= 1
+        if self.is_super_stabilizer_group:
+            # Get stabilizers for this cycle with same type as current holding type.
+            self._this_cycle_stabilizers = [stabilizer for stabilizer in self.stabilizers if stabilizer.stabilizer_type == self.current_holding_type]
+            self.remaining_holding_cycle -= 1
 
-        # If remaining holding cycle is 0, switch to another type.
-        if self.remaining_holding_cycle == 0:
-            self.current_holding_type = 'X' if self.current_holding_type == 'Z' else 'Z'
-            self.remaining_holding_cycle = self.max_holding_cycle[self.current_holding_type]
-
+            # If remaining holding cycle is 0, switch to another type.
+            if self.remaining_holding_cycle == 0:
+                self.current_holding_type = 'X' if self.current_holding_type == 'Z' else 'Z'
+                self.remaining_holding_cycle = self.max_holding_cycle[self.current_holding_type]
+        else:
+            self._this_cycle_stabilizers = self.stabilizers
         return self._this_cycle_stabilizers
     
     @property
@@ -185,26 +187,27 @@ class StabilizerGroup:
         """Get avg stabilizer weight of Z stabilizers."""
         return self.total_stabilizer_weight_z // len(self.stabilizers)
     
+
+@dataclasses.dataclass
+class NodeRecord:
+    """A syndrome record."""
+    node: tuple
+    cycle: int
+
+    def __hash__(self) -> int:
+        return hash((self.node, self.cycle))
     
 @dataclasses.dataclass
 class MeasurementRecords:
-    @dataclasses.dataclass
-    class NodeRecord:
-        """A syndrome record."""
-        node: tuple
-        cycle: int
-
-        def __hash__(self) -> int:
-            return hash((self.node, self.cycle))
-
     measurment_count: int = 0
-    node_measurment_index: Dict[NodeRecord, int] = {} 
+    node_measurment_index: Dict[NodeRecord, int] = dataclasses.field(default_factory=dict)
 
     def add_record(self, node: tuple, cycle: int):
         """Add a measurement record."""
-        self.node_measurment_index[self.NodeRecord(node, cycle)] = MeasurementRecords.measurment_count
-        MeasurementRecords.measurment_count += 1
+        self.node_measurment_index[NodeRecord(node, cycle)] = self.measurment_count
+        self.measurment_count += 1
 
     def stim_rec_index(self, node: tuple, cycle: int) -> int:
         """Get stim record index."""
-        return self.node_measurment_index[self.NodeRecord(node, cycle)] - self.measurment_count
+        return self.node_measurment_index[NodeRecord(node, cycle)] - self.measurment_count
+    

@@ -5,11 +5,11 @@ from typing import List
 
 from ..adapter import Adapter
 from ..device import Device
-from data import BuilderOptions, U1Gate, U2Gate, Stabilizer, MeasurementRecords
-from base_builder import BaseBuilder
+from .data import BuilderOptions, U1Gate, U2Gate, Stabilizer, MeasurementRecords
+from .base_builder import BaseBuilder
 from collections import defaultdict
 
-class StimConstructor(BaseBuilder):
+class StimBuilder(BaseBuilder):
     """Construct stim circuit from input device. """
     def __init__(self, device: Device, builder_options: BuilderOptions | None = None) -> None:
         super().__init__(device, builder_options)
@@ -67,7 +67,7 @@ class StimConstructor(BaseBuilder):
         # Insert Error
         self.u2_error(targ, dest)
 
-    def measure(self, dest):
+    def measurement(self, dest):
         self.circuit += f'M({self._builder_options.physical_errors.measurement}) {self._node_index[dest]}\n'
         # Record measurements
         self._measuremnt_records.add_record(dest, self._current_cycle)
@@ -80,9 +80,10 @@ class StimConstructor(BaseBuilder):
         pass
 
     def end_cycle(self):
-        # Add idle error to all data qubits
-        for node in self._data_qubits:
-            self.data_idle_error(node)
+        # Add idle error to all data qubits if not last cycle
+        if not self._is_last_cycle:
+            for node in self._data_qubits:
+                self.data_idle_error(node)
 
         # Record stabilizer for this cycle.
         for stabilizer_group in self._stabilizer_groups:
