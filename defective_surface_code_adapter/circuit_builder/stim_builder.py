@@ -103,14 +103,16 @@ class StimBuilder(BaseBuilder):
         cycles = self._stabilizer_cycle_records[stabilizer]
         nodes = stabilizer.syndromes
         
-        self._generate_detectors_by_nodes(nodes, cycles)
+        self._generate_detectors_adjacent_cycles(nodes, cycles)
 
         if stabilizer.is_super_stabilizer:
             # Devide cycles into consecutive groups
             cycle_groups = self._consective_cycle_groups(cycles)
             for syndrome in stabilizer.syndromes:
                 for cycle_group in cycle_groups:
-                    self._generate_detectors_by_nodes([syndrome], cycle_group)
+                    self._generate_detectors_adjacent_cycles([syndrome], cycle_group)
+
+        self._starting_cycle_detectors(stabilizer)
 
     def _consective_cycle_groups(self, cycles: List[int]) -> List[List[int]]:
         """Devide cycles into consecutive groups."""
@@ -125,7 +127,7 @@ class StimBuilder(BaseBuilder):
         cycle_groups.append(cycle_group)
         return cycle_groups
     
-    def _generate_detectors_by_nodes(self, nodes: List[tuple], cycles: List[int]):
+    def _generate_detectors_adjacent_cycles(self, nodes: List[tuple], cycles: List[int]):
         """Generate detector using nodes and cycles."""
         if self._builder_options.syndrome_reset:
             # Generate detectors between adjacent cycles
@@ -142,12 +144,30 @@ class StimBuilder(BaseBuilder):
                     self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, cycles[i])}] rec[{self._measuremnt_records.stim_rec_index(node, cycles[i+2])}]'
                 self.circuit += '\n'
 
-    def _starting_cycle_detectors(self):
-        pass
+    def _starting_cycle_detectors(self, stabilizer: Stabilizer):
+        """Generate detectors for starting cycle.
+            This method only implements the case that 0,1 start with Z stabilizer and +,- start with X stabilizer.
+        """
+        if self._stabilizer_cycle_records[stabilizer][0] == 0:
+            for syndrome in stabilizer.syndromes:
+                self._generate_detectors_single_cycle([syndrome], 0)
+        if not self._builder_options.syndrome_reset:
+            if len(self._stabilizer_cycle_records[stabilizer]) > 1:
+                if self._stabilizer_cycle_records[stabilizer][1] == 1:
+                    for syndrome in stabilizer.syndromes:
+                        self._generate_detectors_single_cycle([syndrome], 1)
+    
+    def _generate_detectors_single_cycle(self, nodes: List[tuple], cycle: int):
+        """Generate detectors using nodes and cycle."""
+        self.circuit += f'DETECTOR'
+        for node in nodes:
+            self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, cycle)}]'
+        self.circuit += '\n'
 
     def _data_qubit_detectors(self):
-        pass
-    
+        """Generate detectors for data qubits measurements."""
+        
+
     def _generate_logical_operators(self):
         """Generate logical operator for circuit."""
         pass

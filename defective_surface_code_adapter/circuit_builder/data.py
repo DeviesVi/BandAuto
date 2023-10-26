@@ -51,7 +51,7 @@ class BuilderOptions:
         '1': 'Z',
         '+': 'X',
         '-': 'X',
-    }
+    } # Other types are unimplemented; do not change this option. This setup is for obtaining the most information about stabilizers from the initial state.
     stabilizer_group_holding_cycle_option = HoldingCycleOption.MAX
     stabilizer_group_holding_cycle_ratio = 0.25
     u1gate = U1Gate.H
