@@ -193,13 +193,13 @@ class StimBuilder(BaseBuilder):
     
     def data_idle_error(self, targ):
         "Idle error for data qubit per round including dynamical decoupling operations during readout and reset."
-        self.circuit += f'DEPOLARIZE1 {self._node_index[targ]} {self._builder_options.physical_errors.data_idle}\n'
+        self.circuit += f'DEPOLARIZE1({self._builder_options.physical_errors.data_idle}) {self._node_index[targ]}\n'
     
     def u1_error(self, targ):
-        self.circuit += f'DEPOLARIZE1 {self._node_index[targ]} {self._builder_options.physical_errors.u1}\n'
+        self.circuit += f'DEPOLARIZE1({self._builder_options.physical_errors.u1}) {self._node_index[targ]}\n'
 
     def u2_error(self, targ1, targ2):
-        self.circuit += f'DEPOLARIZE2 {self._node_index[targ1]} {self._node_index[targ2]} {self._builder_options.physical_errors.u2}\n'
+        self.circuit += f'DEPOLARIZE2({self._builder_options.physical_errors.u2}) {self._node_index[targ1]} {self._node_index[targ2]}\n'
 
     def reset_error(self, targ):
-        self.circuit += f'X_ERROR {self._node_index[targ]} {self._builder_options.physical_errors.reset}\n'
+        self.circuit += f'X_ERROR({self._builder_options.physical_errors.reset}) {self._node_index[targ]}\n'
