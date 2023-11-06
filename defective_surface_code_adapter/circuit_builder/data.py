@@ -46,12 +46,21 @@ class BuilderOptions:
         'Z':[[-1,1],[1,1],[-1,-1],[1,-1]],
     }
     syndrome_reset = True
+    
     first_cycle_super_stabilizer_type = {
+        '0': 'X',
+        '1': 'X',
+        '+': 'Z',
+        '-': 'Z',
+    } # Other types are unimplemented; do not change this option. This setup is for getting first round infomation of the undetermined stabilizers.
+
+    data_measurment_stabilizer_type = {
         '0': 'Z',
         '1': 'Z',
         '+': 'X',
         '-': 'X',
-    } # Other types are unimplemented; do not change this option. This setup is for obtaining the most information about stabilizers from the initial state.
+    } # Do not modify this option.
+
     stabilizer_group_holding_cycle_option = HoldingCycleOption.MAX
     stabilizer_group_holding_cycle_ratio = 0.25
     u1gate = U1Gate.H

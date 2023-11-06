@@ -112,7 +112,8 @@ class StimBuilder(BaseBuilder):
                 for cycle_group in cycle_groups:
                     self._generate_detectors_adjacent_cycles([syndrome], cycle_group)
 
-        self._starting_cycle_detectors(stabilizer)
+        self._first_cycle_detectors(stabilizer)
+        self._data_mesurement_detectors(stabilizer)
 
     def _consective_cycle_groups(self, cycles: List[int]) -> List[List[int]]:
         """Devide cycles into consecutive groups."""
@@ -144,13 +145,13 @@ class StimBuilder(BaseBuilder):
                     self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, cycles[i])}] rec[{self._measuremnt_records.stim_rec_index(node, cycles[i+2])}]'
                 self.circuit += '\n'
 
-    def _starting_cycle_detectors(self, stabilizer: Stabilizer):
+    def _first_cycle_detectors(self, stabilizer: Stabilizer):
         """Generate detectors for starting cycle.
-            This method only implements the case that 0,1 start with Z stabilizer and +,- start with X stabilizer.
+            This method only implements the case that 0,1 start with X stabilizer and +,- start with Z stabilizer.
         """
-        if self._stabilizer_cycle_records[stabilizer][0] == 0:
-            for syndrome in stabilizer.syndromes:
-                self._generate_detectors_single_cycle([syndrome], 0)
+        if not self._is_first_cycle_stabilizer(stabilizer):
+            return
+            
         if not self._builder_options.syndrome_reset:
             if len(self._stabilizer_cycle_records[stabilizer]) > 1:
                 if self._stabilizer_cycle_records[stabilizer][1] == 1:
@@ -164,13 +165,28 @@ class StimBuilder(BaseBuilder):
             self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, cycle)}]'
         self.circuit += '\n'
 
-    def _data_qubit_detectors(self):
+    def _data_mesurement_detectors(self, stabilizer: Stabilizer):
         """Generate detectors for data qubits measurements."""
-        
+        if stabilizer.stabilizer_type != self._builder_options.data_measurment_stabilizer_type[self._initial_state]:
+            return
+
+        self.circuit += f'DETECTOR'
+        for data in stabilizer.data_qubits:
+            self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(data, self._current_cycle)}]'
+        for syndrome in stabilizer.syndromes:
+            self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._current_cycle)}]'
+        if not self._builder_options.syndrome_reset:
+            if len(self._stabilizer_cycle_records[stabilizer]) > 1:
+                self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._current_cycle-1)}]'
+        self.circuit += '\n'
 
     def _generate_logical_operators(self):
         """Generate logical operator for circuit."""
         pass
+
+    def _is_first_cycle_stabilizer(self, stabilizer: Stabilizer) -> bool:
+        """Check if the stabilizer is the first cycle stabilizer."""
+        return self._stabilizer_cycle_records[stabilizer][0] == 0
 
     def barrier(self):
         self.circuit += 'TICK\n'
