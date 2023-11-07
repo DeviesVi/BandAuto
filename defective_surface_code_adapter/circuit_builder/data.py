@@ -22,11 +22,11 @@ class U2Gate(Enum):
 
 @dataclasses.dataclass
 class PhysicalErrors:
-    u1 = 1.09e-3
-    u2 = 6.05e-3
-    data_idle = 2.46e-2
-    reset = 1.86e-3
-    measurement = 1.96e-2
+    u1: float = 1.09e-3
+    u2: float = 6.05e-3
+    data_idle: float = 2.46e-2
+    reset: float = 1.86e-3
+    measurement: float = 1.96e-2
 
     def get_ratio(self, ratio: float) -> 'PhysicalErrors':
         """Get physical errors with ratio."""

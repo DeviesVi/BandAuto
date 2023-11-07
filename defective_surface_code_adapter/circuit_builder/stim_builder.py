@@ -16,6 +16,7 @@ class StimBuilder(BaseBuilder):
         self._node_index = {}
         self._measuremnt_records = MeasurementRecords()
         self._stabilizer_cycle_records = defaultdict(list)
+        self._logical_observable_count = 0
 
     def init_circuit(self):
         self.circuit = ''
@@ -101,88 +102,107 @@ class StimBuilder(BaseBuilder):
     def _generate_detectors(self, stabilizer: Stabilizer):
         """Generate detector for stabilizer."""
         cycles = self._stabilizer_cycle_records[stabilizer]
-        nodes = stabilizer.syndromes
         
-        self._generate_detectors_adjacent_cycles(nodes, cycles)
-
-        if stabilizer.is_super_stabilizer:
-            # Devide cycles into consecutive groups
-            cycle_groups = self._consective_cycle_groups(cycles)
-            for syndrome in stabilizer.syndromes:
-                for cycle_group in cycle_groups:
-                    self._generate_detectors_adjacent_cycles([syndrome], cycle_group)
-
-        self._first_cycle_detectors(stabilizer)
+        self._detectors_adjacent_cycles(stabilizer, cycles)
+        self._earliest_time_boundary_detectors(stabilizer)
         self._data_mesurement_detectors(stabilizer)
-
-    def _consective_cycle_groups(self, cycles: List[int]) -> List[List[int]]:
-        """Devide cycles into consecutive groups."""
-        cycle_groups = []
-        cycle_group = [cycles[0]]
-        for i in range(len(cycles) - 1):
-            if cycles[i+1] - cycles[i] == 1:
-                cycle_group.append(cycles[i+1])
-            else:
-                cycle_groups.append(cycle_group)
-                cycle_group = [cycles[i+1]]
-        cycle_groups.append(cycle_group)
-        return cycle_groups
     
-    def _generate_detectors_adjacent_cycles(self, nodes: List[tuple], cycles: List[int]):
+    def _detectors_adjacent_cycles(self, stabilizer: Stabilizer, cycles: List[int]):
         """Generate detector using nodes and cycles."""
         if self._builder_options.syndrome_reset:
             # Generate detectors between adjacent cycles
             for i in range(len(cycles) - 1):
-                self.circuit += f'DETECTOR'
-                for node in nodes:
-                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, cycles[i])}] rec[{self._measuremnt_records.stim_rec_index(node, cycles[i+1])}]'
-                self.circuit += '\n'
+                self._detectors_between_cycles(stabilizer, cycles[i], cycles[i+1])
         else:
             # Generate detectors between secondary adjacent cycles
             for i in range(len(cycles) - 2):
+                self._detectors_between_cycles(stabilizer, cycles[i], cycles[i+2])
+
+    def _detectors_between_cycles(self, stabilizer: Stabilizer, former_cycle: int | None, latter_cycle: int):
+        if self._is_gauge_changed(stabilizer, latter_cycle):
+            self.circuit += f'DETECTOR'
+            for node in stabilizer.syndromes:
+                if former_cycle is not None:
+                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, former_cycle)}]'
+                self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, latter_cycle)}]'
+            self.circuit += '\n'
+        else:
+            for node in stabilizer.syndromes:
                 self.circuit += f'DETECTOR'
-                for node in nodes:
-                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, cycles[i])}] rec[{self._measuremnt_records.stim_rec_index(node, cycles[i+2])}]'
+                if former_cycle is not None:
+                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, former_cycle)}]'
+                self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, latter_cycle)}]'
                 self.circuit += '\n'
 
-    def _first_cycle_detectors(self, stabilizer: Stabilizer):
-        """Generate detectors for starting cycle.
-            This method only implements the case that 0,1 start with X stabilizer and +,- start with Z stabilizer.
+    def _is_gauge_changed(self, stabilizer: Stabilizer, cycle: int) -> bool:
+        """Check if the gauge is changed at the cycle."""
+        if cycle == 0 and stabilizer.stabilizer_type == self._builder_options.data_measurment_stabilizer_type[self._initial_state]:
+            return False
+        return cycle - 1 not in self._stabilizer_cycle_records[stabilizer]
+
+    def _earliest_time_boundary_detectors(self, stabilizer: Stabilizer):
+        """Generate detectors for earliest measurment records.
         """
-        if not self._is_first_cycle_stabilizer(stabilizer):
-            return
-            
+        # Generate detectors for earliest time boundary
+        if stabilizer.stabilizer_type == self._builder_options.data_measurment_stabilizer_type[self._initial_state]:
+            self._detectors_between_cycles(stabilizer, None, self._stabilizer_cycle_records[stabilizer][0])
+
         if not self._builder_options.syndrome_reset:
             if len(self._stabilizer_cycle_records[stabilizer]) > 1:
-                if self._stabilizer_cycle_records[stabilizer][1] == 1:
-                    for syndrome in stabilizer.syndromes:
-                        self._generate_detectors_single_cycle([syndrome], 1)
-    
-    def _generate_detectors_single_cycle(self, nodes: List[tuple], cycle: int):
-        """Generate detectors using nodes and cycle."""
-        self.circuit += f'DETECTOR'
-        for node in nodes:
-            self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(node, cycle)}]'
-        self.circuit += '\n'
+                self._detectors_between_cycles(stabilizer, None, self._stabilizer_cycle_records[stabilizer][1])
 
     def _data_mesurement_detectors(self, stabilizer: Stabilizer):
         """Generate detectors for data qubits measurements."""
         if stabilizer.stabilizer_type != self._builder_options.data_measurment_stabilizer_type[self._initial_state]:
             return
 
-        self.circuit += f'DETECTOR'
-        for data in stabilizer.data_qubits:
-            self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(data, self._current_cycle)}]'
-        for syndrome in stabilizer.syndromes:
-            self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._current_cycle)}]'
-        if not self._builder_options.syndrome_reset:
-            if len(self._stabilizer_cycle_records[stabilizer]) > 1:
-                self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._current_cycle-1)}]'
-        self.circuit += '\n'
+        if self._builder_options.syndrome_reset:
+            if self._max_cycle - 1 in self._stabilizer_cycle_records[stabilizer]:
+                for syndrome in stabilizer.syndromes:
+                    self.circuit += f'DETECTOR'
+                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._max_cycle - 1)}]'
+                    for data in self._data_in_syndrome(syndrome):
+                        self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]'
+                    self.circuit += '\n'
+            else:
+                self.circuit += f'DETECTOR'
+                for syndrome in stabilizer.syndromes:
+                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-1])}]'
+                for data in stabilizer.data_qubits:
+                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]'
+                self.circuit += '\n'
+        else:
+            if self._max_cycle - 1 in self._stabilizer_cycle_records[stabilizer] and not self._is_gauge_changed(stabilizer, self._max_cycle - 1):
+                for syndrome in stabilizer.syndromes:
+                    self.circuit += f'DETECTOR'
+                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._max_cycle - 1)}]'
+                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._max_cycle - 2)}]'
+                    for data in self._data_in_syndrome(syndrome):
+                        self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]'
+                    self.circuit += '\n'
+            else:
+                self.circuit += f'DETECTOR'
+                for syndrome in stabilizer.syndromes:
+                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-1])}]'
+                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-2])}]'
+                for data in stabilizer.data_qubits:
+                    self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]'
+                self.circuit += '\n'
 
     def _generate_logical_operators(self):
         """Generate logical operator for circuit."""
-        pass
+        if self._initial_state in ['0', '1']:
+            self._generate_logical_operator(self._logical_z_data_qubits)
+        elif self._initial_state in ['+', '-']:
+            self._generate_logical_operator(self._logical_x_data_qubits)
+
+    def _generate_logical_operator(self, logical_data_qubits: List[tuple]):
+        """Generate logical operator for circuit."""
+        self.circuit += f'OBSERVABLE_INCLUDE({self._logical_observable_count})'
+        self._logical_observable_count += 1
+        for data in logical_data_qubits:
+            self.circuit += f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]'
+        self.circuit += '\n'
 
     def _is_first_cycle_stabilizer(self, stabilizer: Stabilizer) -> bool:
         """Check if the stabilizer is the first cycle stabilizer."""
