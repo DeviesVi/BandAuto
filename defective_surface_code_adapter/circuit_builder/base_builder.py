@@ -116,6 +116,9 @@ class BaseBuilder(ABC):
         for pattern in range(4):
             self.barrier()
             for syndrome in syndrome_for_cycle:
+                self._switch_basis_before_coupling(self._get_data_qubit(syndrome, pattern), syndrome)
+            self.barrier()
+            for syndrome in syndrome_for_cycle:
                 self._couple_qubits(self._get_data_qubit(syndrome, pattern), syndrome)
         
         # Return all syndrome to Z basis.
@@ -165,8 +168,8 @@ class BaseBuilder(ABC):
         self.unitary1(node, target_basis)
         self._basis[node] = target_basis
 
-    def _couple_qubits(self, data_qubit: tuple | None, syndrome: tuple):
-        """Couple data qubit to syndrome."""
+    def _switch_basis_before_coupling(self, data_qubit: tuple | None, syndrome: tuple):
+        """Switch basis before coupling data qubit to syndrome."""
         # If use CZ:
         # X syndrome: Syndrome in X basis, data qubit in X basis.
         # Z syndrome: Syndrome in X basis, data qubit in Z basis.
@@ -185,10 +188,6 @@ class BaseBuilder(ABC):
                 self._switch_basis(data_qubit, 'X')
             elif self._get_node_type(syndrome) == 'Z':
                 self._switch_basis(data_qubit, 'Z')
-            
-            # Use u2 to couple.
-            self.barrier()
-            self.unitary2(data_qubit, syndrome)
 
         elif self._builder_options.u2gate == U2Gate.CNOT:
             # Use u1 to switch basis.
@@ -196,9 +195,26 @@ class BaseBuilder(ABC):
                 self._switch_basis(syndrome, 'X')
             elif self._get_node_type(syndrome) == 'Z':
                 self._switch_basis(syndrome, 'Z')
-            
+
+    def _couple_qubits(self, data_qubit: tuple | None, syndrome: tuple):
+        """Couple data qubit to syndrome."""
+        # If use CZ:
+        # X syndrome: Syndrome in X basis, data qubit in X basis.
+        # Z syndrome: Syndrome in X basis, data qubit in Z basis.
+        # If use CNOT:
+        # X syndrome: Syndrome in X basis, data qubit in Z basis.
+        # Z syndrome: Syndrome in Z basis, data qubit in Z basis.
+        #   CNOT direction: X -> D, Z <- D
+
+        if data_qubit is None:
+            return
+
+        if self._builder_options.u2gate == U2Gate.CZ:
             # Use u2 to couple.
-            self.barrier()
+            self.unitary2(data_qubit, syndrome)
+
+        elif self._builder_options.u2gate == U2Gate.CNOT:
+            # Use u2 to couple.
             if self._get_node_type(syndrome) == 'X':
                 self.unitary2(syndrome, data_qubit)
             elif self._get_node_type(syndrome) == 'Z':
