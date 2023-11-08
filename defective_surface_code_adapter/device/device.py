@@ -24,6 +24,13 @@ class Device:
 
     data_height: int
     data_width: int
+    qubit_defect_rate: float = 0.0
+    coupler_defect_rate: float = 0.0
+    exact_rate: bool = False
+
+    def to_dict(self) -> dict:
+        """Convert to dict."""
+        return dataclasses.asdict(self)
 
     def __post_init__(self) -> None:
         # Create connectivity graph for rotated lattice.
@@ -82,6 +89,10 @@ class Device:
                 coupler_defect_rate: The probability of a coupler is defective.
                 exact_rate: If True, the defect rate will be exactly qubit_defect_rate and coupler_defect_rate.
         """
+        self.qubit_defect_rate = qubit_defect_rate
+        self.coupler_defect_rate = coupler_defect_rate
+        self.exact_rate = exact_rate
+
         if not exact_rate:
             for node in self.graph.nodes:
                 self.graph.nodes[node]['defective'] = self._randomTrue(qubit_defect_rate)

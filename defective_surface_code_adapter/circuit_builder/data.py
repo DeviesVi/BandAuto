@@ -37,6 +37,10 @@ class PhysicalErrors:
             reset = self.reset * ratio,
             measurement = self.measurement * ratio,
         )
+    
+    def to_dict(self) -> Dict[str, float]:
+        """Convert to dict."""
+        return dataclasses.asdict(self)
 
 @dataclasses.dataclass
 class BuilderOptions:
