@@ -114,7 +114,7 @@ class Device:
         pickle.dump(self, open(path, 'wb'))
 
     @staticmethod
-    def load(path: str):
+    def load(path: str) -> 'Device':
         """Load the device from a file.
             Args:
                 path: The path to load the device.
