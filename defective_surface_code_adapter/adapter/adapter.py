@@ -2,7 +2,7 @@
 import networkx as nx
 from ..device import Device
 from typing import Dict, Union, List, Set, Optional
-from .data import Boundary, BoundaryType, BoundaryNodeType, AdaptResult
+from .data import Boundary, BoundaryType, BoundaryNodeType, AdaptResult, AdapterOptions
 from .exception import AdapterException
 
 
@@ -10,7 +10,7 @@ class Adapter:
     """Adapter class for device."""
 
     @classmethod
-    def adapt_device(cls, device: Device) -> AdaptResult:
+    def adapt_device(cls, device: Device, adapt_options: AdapterOptions = AdapterOptions()) -> AdaptResult:
         """Adapt a device.
             Args:
                 device: The device to adapt.
@@ -35,6 +35,7 @@ class Adapter:
         }
 
         cls._device = device
+        cls._adapt_options = adapt_options
 
         cls._boundary_deformation()
         cls._interal_defect_handler()
@@ -100,6 +101,8 @@ class Adapter:
         node_type = cls._get_boundary_data_type(node)
         involved_boundaries = cls._node_in_boundaries(node)
 
+        cls._new_boundary_data = []
+
         # Clean defect syndrome in frontier.
         for syndrome in cls._get_frontier(node):
             if cls._is_defective_node(syndrome):
@@ -117,12 +120,24 @@ class Adapter:
                     if not cls._is_disabled_node(neighbor):
                         cls._frontier_syndrome_cleaner(neighbor, involved_boundaries)
 
+            # Add all new boundary data to XT or XB if involved.
+            if BoundaryType.XT in involved_boundaries:
+                cls._boundaries[BoundaryType.XT].add_nodes(cls._new_boundary_data)
+            if BoundaryType.XB in involved_boundaries:
+                cls._boundaries[BoundaryType.XB].add_nodes(cls._new_boundary_data)
+
         elif node_type == BoundaryNodeType.Z:
             # Clean all undisabled X syndromes in frontier.
             for neighbor in cls._get_frontier(node):
                 if cls._get_node_type(neighbor) == 'X':
                     if not cls._is_disabled_node(neighbor):
                         cls._frontier_syndrome_cleaner(neighbor, involved_boundaries)
+
+            # Add all new boundary data to ZL or ZR if involved.
+            if BoundaryType.ZL in involved_boundaries:
+                cls._boundaries[BoundaryType.ZL].add_nodes(cls._new_boundary_data)
+            if BoundaryType.ZR in involved_boundaries:
+                cls._boundaries[BoundaryType.ZR].add_nodes(cls._new_boundary_data)
 
         elif node_type == BoundaryNodeType.C:
             # In this situation, the node no more than 2 undisabled neighbors.
@@ -133,11 +148,47 @@ class Adapter:
                 else:
                     cls._frontier_syndrome_cleaner(cls._get_frontier(node)[1], involved_boundaries)
             # If has 1 undisabled neighbors, do nothing.
+
+            # Count frontier type of new boundary data.
+            z_frontier_count = 0
+            x_frontier_count = 0
+            for neighbor in cls._new_boundary_data:
+                if cls._frontier_type(neighbor) == BoundaryNodeType.Z:
+                    z_frontier_count += 1
+                elif cls._frontier_type(neighbor) == BoundaryNodeType.X:
+                    x_frontier_count += 1
+
+            # If new boundary data has more Z frontier, add it to ZL or ZR if involved.
+            if z_frontier_count > x_frontier_count:
+                if BoundaryType.ZL in involved_boundaries:
+                    cls._boundaries[BoundaryType.ZL].add_nodes(cls._new_boundary_data)
+                if BoundaryType.ZR in involved_boundaries:
+                    cls._boundaries[BoundaryType.ZR].add_nodes(cls._new_boundary_data)
+            # If new boundary data has more X frontier, add it to XT or XB if involved.
+            elif z_frontier_count < x_frontier_count:
+                if BoundaryType.XT in involved_boundaries:
+                    cls._boundaries[BoundaryType.XT].add_nodes(cls._new_boundary_data)
+                if BoundaryType.XB in involved_boundaries:
+                    cls._boundaries[BoundaryType.XB].add_nodes(cls._new_boundary_data)
+            # If new boundary data has equal X and Z frontier, deal with it according to preferred syndrome type.
+            else:
+                if cls._adapt_options.preferred_syndrome_type == 'X':
+                    if BoundaryType.XT in involved_boundaries:
+                        cls._boundaries[BoundaryType.XT].add_nodes(cls._new_boundary_data)
+                    if BoundaryType.XB in involved_boundaries:
+                        cls._boundaries[BoundaryType.XB].add_nodes(cls._new_boundary_data)
+                elif cls._adapt_options.preferred_syndrome_type == 'Z':
+                    if BoundaryType.ZL in involved_boundaries:
+                        cls._boundaries[BoundaryType.ZL].add_nodes(cls._new_boundary_data)
+                    if BoundaryType.ZR in involved_boundaries:
+                        cls._boundaries[BoundaryType.ZR].add_nodes(cls._new_boundary_data)
+                else:
+                    raise ValueError(f'Invalid preferred syndrome type: {cls._adapt_options.preferred_syndrome_type}.')
+
         elif node_type == BoundaryNodeType.N:
             # Visiting wrong node, raise exception.
             raise AdapterException(f'Visiting wrong node {node}.')
-
-            
+        
     @classmethod
     def _frontier_syndrome_cleaner(cls, syndrome: tuple, involved_boundaries: List[BoundaryType]):
         """Clean frontier syndrome.
@@ -151,12 +202,7 @@ class Adapter:
 
         # Get all undisabled neighbors as new data.
         new_data = cls._get_undisabled_neighbors(syndrome)
-
-        # Add new data to involved boundaries.
-        for data in new_data:
-            for boundary_type in involved_boundaries:
-                cls._boundaries[boundary_type].add_node(data)
-
+        cls._new_boundary_data.extend(new_data)
 
     @classmethod
     def _boundary_data_safety_check(cls, node: tuple) -> bool:

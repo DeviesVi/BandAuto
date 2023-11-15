@@ -26,8 +26,13 @@ class Boundary:
     nodes: set
     boundary_type: BoundaryType
 
-    def add_node(self, node: tuple):
-        self.nodes.add(node)
+    def add_nodes(self, nodes: List[tuple]):
+        self.nodes.update(nodes)
+
+@dataclasses.dataclass
+class AdapterOptions:
+    """Adapter options."""
+    preferred_syndrome_type: str = 'X' # When situation is ambiguous, keep this syndrome type. 'X' or 'Z', default is 'X', because we suffer more from Z error.
 
 @dataclasses.dataclass
 class AdaptResult:
