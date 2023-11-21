@@ -5,7 +5,7 @@ from typing import List
 
 from ..adapter import Adapter
 from ..device import Device
-from .data import BuilderOptions, U1Gate, U2Gate, Stabilizer, MeasurementRecords
+from .data import BuilderOptions, U1Gate, U2Gate, Stabilizer, MeasurementRecords, OPType
 from .base_builder import BaseBuilder
 from collections import defaultdict
 
@@ -17,6 +17,8 @@ class StimBuilder(BaseBuilder):
         self._measuremnt_records = MeasurementRecords()
         self._stabilizer_cycle_records = defaultdict(list)
         self._logical_observable_count = 0
+        self._op_this_time_step = OPType.INIT
+        self._operated_qubits_this_time_step = []
 
     def init_circuit(self):
         self.circuit = ''
@@ -44,8 +46,11 @@ class StimBuilder(BaseBuilder):
             
         elif initial_state == '-':
             for node in self._logical_z_data_qubits:
-                self.circuit += f'Z {self._node_index[node]}\n'        
-            
+                self.circuit += f'Z {self._node_index[node]}\n'
+
+        self._op_this_time_step = OPType.INIT
+
+        # TODO: Add error for state preparation
     
     def unitary1(self, dest, target_basis):
         if self._builder_options.u1gate == U1Gate.H:
@@ -58,6 +63,9 @@ class StimBuilder(BaseBuilder):
 
         # Insert Error
         self.u1_error(dest)
+
+        self._op_this_time_step = OPType.U1
+        self._operated_qubits_this_time_step.append(dest)
         
     def unitary2(self, targ, dest):
         if self._builder_options.u2gate == U2Gate.CZ:
@@ -68,10 +76,16 @@ class StimBuilder(BaseBuilder):
         # Insert Error
         self.u2_error(targ, dest)
 
+        self._op_this_time_step = OPType.U2
+        self._operated_qubits_this_time_step.append(targ)
+        self._operated_qubits_this_time_step.append(dest)
+
     def measurement(self, dest):
         self.circuit += f'M({self._builder_options.physical_errors.measurement}) {self._node_index[dest]}\n'
         # Record measurements
         self._measuremnt_records.add_record(dest, self._current_cycle)
+        self._op_this_time_step = OPType.MEAS
+        self._operated_qubits_this_time_step.append(dest)
 
     def reset(self, dest):
         self.circuit += f'R {self._node_index[dest]}\n'
@@ -84,7 +98,7 @@ class StimBuilder(BaseBuilder):
         # Add idle error to all data qubits if not last cycle
         if not self._is_last_cycle:
             for node in self._data_qubits:
-                self.data_idle_error(node)
+                self.readout_idle_error(node)
 
         # Record stabilizer for this cycle.
         for stabilizer_group in self._stabilizer_groups:
@@ -210,12 +224,23 @@ class StimBuilder(BaseBuilder):
         return self._stabilizer_cycle_records[stabilizer][0] == 0
 
     def barrier(self):
+        # Insert idle error to all qubit not operated in this time step if optype is u1 and u2.
+        if self._op_this_time_step in [OPType.U1, OPType.U2]:
+            for node in self._all_qubits:
+                if node not in self._operated_qubits_this_time_step:
+                    self.idle_error(node)
+
         self.circuit += 'TICK\n'
+        self._operated_qubits_this_time_step = []
     
-    def data_idle_error(self, targ):
-        "Idle error for data qubit per round including dynamical decoupling operations during readout and reset."
-        self.circuit += f'DEPOLARIZE1({self._builder_options.physical_errors.data_idle}) {self._node_index[targ]}\n'
-    
+    def idle_error(self, targ):
+        "Idle error for unoperated qubit in a time step."
+        self.circuit += f'DEPOLARIZE1({self._builder_options.physical_errors.idle}) {self._node_index[targ]}\n'
+
+    def readout_idle_error(self, targ):
+        "Idle error for data qubit including dynamical decoupling operations during readout and reset."
+        self.circuit += f'DEPOLARIZE1({self._builder_options.physical_errors.readout_idle}) {self._node_index[targ]}\n'
+
     def u1_error(self, targ):
         self.circuit += f'DEPOLARIZE1({self._builder_options.physical_errors.u1}) {self._node_index[targ]}\n'
 

@@ -10,6 +10,12 @@ class HoldingCycleOption(Enum):
     MAX = 'max'
     AVG = 'avg'
 
+class OPType(Enum):
+    INIT = 'INIT'
+    U1 = 'U1'
+    U2 = 'U2'
+    MEAS = 'MEAS'
+
 class U1Gate(Enum):
     """U1 gate options."""
     H = 'H' # Hadamard
@@ -24,7 +30,8 @@ class U2Gate(Enum):
 class PhysicalErrors:
     u1: float = 1.09e-3
     u2: float = 6.05e-3
-    data_idle: float = 2.46e-2
+    idle: float = 0
+    readout_idle: float = 2.46e-2
     reset: float = 1.86e-3
     measurement: float = 1.96e-2
 
@@ -33,7 +40,7 @@ class PhysicalErrors:
         return PhysicalErrors(
             u1 = self.u1 * ratio,
             u2 = self.u2 * ratio,
-            data_idle = self.data_idle * ratio,
+            readout_idle = self.readout_idle * ratio,
             reset = self.reset * ratio,
             measurement = self.measurement * ratio,
         )
