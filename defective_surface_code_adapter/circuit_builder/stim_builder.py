@@ -145,7 +145,8 @@ class StimBuilder(BaseBuilder):
         """
         # Generate detectors for earliest time boundary
         if stabilizer.stabilizer_type == self._builder_options.data_measurment_stabilizer_type[self._initial_state]:
-            self._detectors_between_cycles(stabilizer, None, self._stabilizer_cycle_records[stabilizer][0])
+            if len(self._stabilizer_cycle_records[stabilizer]) != 0:
+                self._detectors_between_cycles(stabilizer, None, self._stabilizer_cycle_records[stabilizer][0])
 
         if not self._builder_options.syndrome_reset:
             if len(self._stabilizer_cycle_records[stabilizer]) > 1:
