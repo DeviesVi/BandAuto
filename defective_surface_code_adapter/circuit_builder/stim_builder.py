@@ -28,29 +28,35 @@ class StimBuilder(BaseBuilder):
 
     def state_preparation(self, initial_state):
         assert initial_state in ['0', '1', '+', '-'], "Initial state must be one of '0', '1', '+', '-'"
-        # Reset all syndrome qubits to |0>
-        for node in self._syndromes:
+        # Reset all qubits to |0>
+        for node in self._all_qubits:
             self.circuit += f'R {self._node_index[node]}\n'
 
-        # Set all data qubits to |0> or |+>
-        for node in self._data_qubits:
-            if initial_state in ['0', '1']:
-                self.circuit += f'R {self._node_index[node]}\n'
-            elif initial_state in ['+', '-']:
-                self.circuit += f'RX {self._node_index[node]}\n'
-        
+        # Insert init error
+        for node in self._all_qubits:
+            self.circuit += f'X_ERROR({self._builder_options.physical_errors.reset}) {self._node_index[node]}\n'
+
+        self.barrier()
+
+        # Set all data qubits to |+> if initial state is |+> or |->
+        if initial_state in ['+', '-']:
+            for node in self._data_qubits:
+                self.unitary1(node, 'X')
+
+        self.barrier()
+
         # Flip logical data qubit to |1> or |-> if necessary
         if initial_state == '1':
             for node in self._logical_x_data_qubits:
                 self.circuit += f'X {self._node_index[node]}\n'
+                self._operated_qubits_this_time_step.append(node)
             
         elif initial_state == '-':
             for node in self._logical_z_data_qubits:
                 self.circuit += f'Z {self._node_index[node]}\n'
+                self._operated_qubits_this_time_step.append(node)
 
-        self._op_this_time_step = OPType.INIT
-
-        # TODO: Add error for state preparation
+        self._op_this_time_step = OPType.U1
     
     def unitary1(self, dest, target_basis):
         if self._builder_options.u1gate == U1Gate.H:

@@ -28,21 +28,38 @@ class U2Gate(Enum):
 
 @dataclasses.dataclass
 class PhysicalErrors:
-    u1: float = 1.09e-3
-    u2: float = 6.05e-3
-    idle: float = 0
-    readout_idle: float = 2.46e-2
-    reset: float = 1.86e-3
-    measurement: float = 1.96e-2
-
-    def get_ratio(self, ratio: float) -> 'PhysicalErrors':
-        """Get physical errors with ratio."""
+    u1: float
+    u2: float
+    idle: float
+    readout_idle: float
+    reset: float
+    measurement: float
+    
+    @staticmethod
+    def SI1000_from_p(p: float) -> 'PhysicalErrors':
+        """Get SI1000 error model from p."""
         return PhysicalErrors(
-            u1 = self.u1 * ratio,
-            u2 = self.u2 * ratio,
-            readout_idle = self.readout_idle * ratio,
-            reset = self.reset * ratio,
-            measurement = self.measurement * ratio,
+            u1 = 0.1 * p,
+            u2 = p,
+            idle = 0.1 * p,
+            readout_idle = 2 * p,
+            reset = 2 * p,
+            measurement = 5 * p,
+        )
+    
+    @staticmethod
+    def ratio_google_error(ratio: float) -> 'PhysicalErrors':
+        """Get error model from Google's Nature.
+            https://www.nature.com/articles/s41586-022-05434-1
+            experimental operation point
+        """
+        return PhysicalErrors(
+            u1 = 1.09e-3 * ratio,
+            u2 = 6.05e-3 * ratio,
+            idle = 0,
+            readout_idle = 2.46e-2 * ratio,
+            reset = 1.86e-3 * ratio,
+            measurement = 1.96e-2 * ratio,
         )
     
     def to_dict(self) -> Dict[str, float]:
@@ -77,7 +94,7 @@ class BuilderOptions:
     u1gate = U1Gate.H
     u2gate = U2Gate.CZ
 
-    physical_errors = PhysicalErrors()
+    physical_errors = PhysicalErrors.ratio_google_error(1)
 
 class Stabilizer:
     """A stabilizer."""
