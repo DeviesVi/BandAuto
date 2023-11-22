@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Generator
 from ..device import Device
 from ..circuit_builder import StimBuilder
-from ..circuit_builder.data import BuilderOptions, PhysicalErrors
+from ..circuit_builder.data import BuilderOptions, PhysicalErrors, HoldingCycleOption
 import stim
 import sinter
 
@@ -28,11 +28,13 @@ class SinterSampler:
         cycles: List[int],
         initial_states: List[str],
         physical_errors_list: List[PhysicalErrors],
+        holding_cycle_option: HoldingCycleOption = HoldingCycleOption.MAX,
         metadata: Dict[str, Any] = {},
     ) -> Generator[sinter.Task, None, None]:
         for physical_errors in physical_errors_list:
             options = BuilderOptions()
             options.physical_errors = physical_errors
+            options.stabilizer_group_holding_cycle_option = holding_cycle_option
             builder = StimBuilder(device, options)
             for initial_state in initial_states:
                 for cycle in cycles:

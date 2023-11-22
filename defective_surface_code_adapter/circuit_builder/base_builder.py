@@ -1,7 +1,7 @@
 """Base constructor to build circuits for the surface code."""
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Dict, List
 from math import floor
 from functools import cached_property
 
@@ -231,6 +231,8 @@ class BaseBuilder(ABC):
 
     def _init_stabilizer_groups(self, initial_state):
         """Initialize stabilizer groups."""
+        global_stabilizer_weights = self._collect_stabilizer_groups_info()
+
         for stabilizer_group in self._stabilizer_groups:
             if stabilizer_group.is_super_stabilizer_group:
                 stabilizer_group.current_holding_type = self._builder_options.first_cycle_super_stabilizer_type[initial_state]
@@ -243,12 +245,55 @@ class BaseBuilder(ABC):
                 elif self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.AVG:
                     x_weight = stabilizer_group.avg_stabilizer_weight_x
                     z_weight = stabilizer_group.avg_stabilizer_weight_z
-                stabilizer_group.max_holding_cycle['X'] = floor(self._builder_options.stabilizer_group_holding_cycle_ratio * x_weight)
-                stabilizer_group.max_holding_cycle['Z'] = floor(self._builder_options.stabilizer_group_holding_cycle_ratio * z_weight)
-                stabilizer_group.remaining_holding_cycle = stabilizer_group.max_holding_cycle[stabilizer_group.current_holding_type]
+                elif self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.GLOBALMAX:
+                    x_weight = global_stabilizer_weights['max_x']
+                    z_weight = global_stabilizer_weights['max_z']
+                elif self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.GLOBALMIN:
+                    x_weight = global_stabilizer_weights['min_x']
+                    z_weight = global_stabilizer_weights['min_z']
+                elif self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.GLOBALAVG:
+                    x_weight = global_stabilizer_weights['avg_x']
+                    z_weight = global_stabilizer_weights['avg_z']
+                stabilizer_group.max_holding_cycle['X'] = self._builder_options.stabilizer_group_holding_cycle_ratio * x_weight
+                stabilizer_group.max_holding_cycle['Z'] = self._builder_options.stabilizer_group_holding_cycle_ratio * z_weight
             else:
                 # Non-super stabilizer groups, do nothing.
                 pass
+
+    def _collect_stabilizer_groups_info(self) -> Dict[str, int|float]:
+        # Collect weight data of all stabilizer groups.
+        global_stabilizer_weights = {
+            'max_x': None,
+            'max_z': None,
+            'min_x': None,
+            'min_z': None,
+            'avg_x': None,
+            'avg_z': None
+        }
+
+        super_stabilizer_count_x = 0
+        super_stabilizer_count_z = 0
+        super_stabilizer_weight_x_sum = 0
+        super_stabilizer_weight_z_sum = 0
+
+        for stabilizer_group in self._stabilizer_groups:
+            if stabilizer_group.is_super_stabilizer_group:
+                super_stabilizer_count_x += stabilizer_group.total_stabilizer_count_x
+                super_stabilizer_count_z += stabilizer_group.total_stabilizer_count_z
+                super_stabilizer_weight_x_sum += stabilizer_group.max_stabilizer_weight_x
+                super_stabilizer_weight_z_sum += stabilizer_group.max_stabilizer_weight_z
+                if global_stabilizer_weights['max_x'] is None or stabilizer_group.max_stabilizer_weight_x > global_stabilizer_weights['max_x']:
+                    global_stabilizer_weights['max_x'] = stabilizer_group.max_stabilizer_weight_x
+                if global_stabilizer_weights['max_z'] is None or stabilizer_group.max_stabilizer_weight_z > global_stabilizer_weights['max_z']:
+                    global_stabilizer_weights['max_z'] = stabilizer_group.max_stabilizer_weight_z
+                if global_stabilizer_weights['min_x'] is None or stabilizer_group.min_stabilizer_weight_x < global_stabilizer_weights['min_x']:
+                    global_stabilizer_weights['min_x'] = stabilizer_group.min_stabilizer_weight_x
+                if global_stabilizer_weights['min_z'] is None or stabilizer_group.min_stabilizer_weight_z < global_stabilizer_weights['min_z']:
+                    global_stabilizer_weights['min_z'] = stabilizer_group.min_stabilizer_weight_z
+        global_stabilizer_weights['avg_x'] = super_stabilizer_weight_x_sum / super_stabilizer_count_x
+        global_stabilizer_weights['avg_z'] = super_stabilizer_weight_z_sum / super_stabilizer_count_z
+
+        return global_stabilizer_weights
 
     # Utility methods
     def _is_disabled_node(self, node: tuple) -> bool:

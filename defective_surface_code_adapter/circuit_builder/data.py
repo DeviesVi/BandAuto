@@ -9,6 +9,9 @@ class HoldingCycleOption(Enum):
     MIN = 'min'
     MAX = 'max'
     AVG = 'avg'
+    GLOBALMIN = 'globalmin'
+    GLOBALMAX = 'globalmax'
+    GLOBALAVG = 'globalavg'
 
 class OPType(Enum):
     INIT = 'INIT'
@@ -138,18 +141,18 @@ class StabilizerGroup:
             'Z': 0,
         }
         self.current_holding_type = 'X'
-        self.remaining_holding_cycle = 0
+        self.current_holding_cycle = 0
 
     def gen_stabilizers_for_1cycle(self):
         if self.is_super_stabilizer_group:
             # Get stabilizers for this cycle with same type as current holding type.
             self._this_cycle_stabilizers = [stabilizer for stabilizer in self.stabilizers if stabilizer.stabilizer_type == self.current_holding_type]
-            self.remaining_holding_cycle -= 1
+            self.current_holding_cycle += 1
 
-            # If remaining holding cycle is 0, switch to another type.
-            if self.remaining_holding_cycle == 0:
-                self.current_holding_type = 'X' if self.current_holding_type == 'Z' else 'Z'
-                self.remaining_holding_cycle = self.max_holding_cycle[self.current_holding_type]
+            # If current holding cycle exceeds max holding cycle, switch to the other type.
+            if self.current_holding_cycle >= self.max_holding_cycle[self.current_holding_type]:
+                self.current_holding_type = 'Z' if self.current_holding_type == 'X' else 'X'
+                self.current_holding_cycle -= self.max_holding_cycle[self.current_holding_type]
         else:
             self._this_cycle_stabilizers = self.stabilizers
         return self._this_cycle_stabilizers
@@ -179,6 +182,21 @@ class StabilizerGroup:
         """Get total stabilizer weight of Z stabilizers."""
         return sum([len(stabilizer.data_qubits) for stabilizer in self.stabilizers if stabilizer.stabilizer_type == 'Z'])
     
+    @cached_property
+    def total_stabilizer_count(self) -> int:
+        """Get total stabilizer count."""
+        return len(self.stabilizers)
+    
+    @cached_property
+    def total_stabilizer_count_x(self) -> int:
+        """Get total stabilizer count of X stabilizers."""
+        return len([stabilizer for stabilizer in self.stabilizers if stabilizer.stabilizer_type == 'X'])
+    
+    @cached_property
+    def total_stabilizer_count_z(self) -> int:
+        """Get total stabilizer count of Z stabilizers."""
+        return len([stabilizer for stabilizer in self.stabilizers if stabilizer.stabilizer_type == 'Z'])
+
     @cached_property
     def max_stabilizer_weight(self) -> int:
         """Get max stabilizer weight."""
@@ -210,19 +228,19 @@ class StabilizerGroup:
         return min([len(stabilizer.data_qubits) for stabilizer in self.stabilizers if stabilizer.stabilizer_type == 'Z'])
     
     @cached_property
-    def avg_stabilizer_weight(self) -> int:
+    def avg_stabilizer_weight(self) -> float:
         """Get avg stabilizer weight."""
-        return self.total_stabilizer_weight // len(self.stabilizers)
+        return self.total_stabilizer_weight / self.total_stabilizer_count
     
     @cached_property
-    def avg_stabilizer_weight_x(self) -> int:
+    def avg_stabilizer_weight_x(self) -> float:
         """Get avg stabilizer weight of X stabilizers."""
-        return self.total_stabilizer_weight_x // len(self.stabilizers)
+        return self.total_stabilizer_weight_x / self.total_stabilizer_count_x
     
     @cached_property
-    def avg_stabilizer_weight_z(self) -> int:
+    def avg_stabilizer_weight_z(self) -> float:
         """Get avg stabilizer weight of Z stabilizers."""
-        return self.total_stabilizer_weight_z // len(self.stabilizers)
+        return self.total_stabilizer_weight_z / self.total_stabilizer_count_z
     
 
 @dataclasses.dataclass
