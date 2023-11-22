@@ -280,8 +280,8 @@ class BaseBuilder(ABC):
             if stabilizer_group.is_super_stabilizer_group:
                 super_stabilizer_count_x += stabilizer_group.total_stabilizer_count_x
                 super_stabilizer_count_z += stabilizer_group.total_stabilizer_count_z
-                super_stabilizer_weight_x_sum += stabilizer_group.max_stabilizer_weight_x
-                super_stabilizer_weight_z_sum += stabilizer_group.max_stabilizer_weight_z
+                super_stabilizer_weight_x_sum += stabilizer_group.total_stabilizer_weight_x
+                super_stabilizer_weight_z_sum += stabilizer_group.total_stabilizer_weight_z
                 if global_stabilizer_weights['max_x'] is None or stabilizer_group.max_stabilizer_weight_x > global_stabilizer_weights['max_x']:
                     global_stabilizer_weights['max_x'] = stabilizer_group.max_stabilizer_weight_x
                 if global_stabilizer_weights['max_z'] is None or stabilizer_group.max_stabilizer_weight_z > global_stabilizer_weights['max_z']:
