@@ -13,15 +13,15 @@ class StimBuilder(BaseBuilder):
     """Construct stim circuit from input device. """
     def __init__(self, device: Device, builder_options: BuilderOptions | None = None) -> None:
         super().__init__(device, builder_options)
+        
+    def init_circuit(self):
+        self.circuit = ''
         self._node_index = {}
         self._measuremnt_records = MeasurementRecords()
         self._stabilizer_cycle_records = defaultdict(list)
         self._logical_observable_count = 0
         self._op_this_time_step = OPType.INIT
         self._operated_qubits_this_time_step = []
-
-    def init_circuit(self):
-        self.circuit = ''
         for i, node in enumerate(self._all_qubits):
             self.circuit += f'QUBIT_COORDS{node} {i}\n'
             self._node_index[node] = i
