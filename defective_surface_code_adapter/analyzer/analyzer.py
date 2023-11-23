@@ -18,8 +18,24 @@ class Analyzer:
 
         x_shortest_distance, x_shortest_paths_count = cls._analyze_error_type('X')
         z_shortest_distance, z_shortest_paths_count = cls._analyze_error_type('Z')
-        
-        return AnalysisResult(x_shortest_distance, x_shortest_paths_count, z_shortest_distance, z_shortest_paths_count)
+
+        super_stabilizer_weights = [len(cls._data_in_stabilizer(stabilizer)) for stabilizer in cls._adapt_result.stabilizers if len(stabilizer) > 1]
+        super_stabilizer_weights.sort()
+        max_stabilizer_weight = super_stabilizer_weights[-1]
+        min_stabilizer_weight = super_stabilizer_weights[0]
+        me_stabilizer_weight = super_stabilizer_weights[len(super_stabilizer_weights)//2]
+        avg_stabilizer_weight = np.mean(super_stabilizer_weights)
+
+        return AnalysisResult(
+            x_distance=x_shortest_distance,
+            x_shortest_paths_count=x_shortest_paths_count,
+            z_distance=z_shortest_distance,
+            z_shortest_paths_count=z_shortest_paths_count,
+            max_stabilizer_weight=max_stabilizer_weight,
+            min_stabilizer_weight=min_stabilizer_weight,
+            me_stabilizer_weight=me_stabilizer_weight,
+            avg_stabilizer_weight=avg_stabilizer_weight
+        )
     
     @classmethod
     def _analyze_error_type(cls, error_type: str) -> Tuple[int, int]:

@@ -8,5 +8,19 @@ class AnalysisResult:
     z_distance: int
     z_shortest_paths_count: int
 
+    max_stabilizer_weight: int
+    min_stabilizer_weight: int
+    me_stabilizer_weight: int
+    avg_stabilizer_weight: float
+
     def __str__(self):
-        return f'x_distance: {self.x_distance}, x_shortest_paths_count: {self.x_shortest_paths_count}, z_distance: {self.z_distance}, z_shortest_paths_count: {self.z_shortest_paths_count}'
+        # Pretty output.
+        return f"""Analysis Result:
+    X distance: {self.x_distance}
+    X shortest paths count: {self.x_shortest_paths_count}
+    Z distance: {self.z_distance}
+    Z shortest paths count: {self.z_shortest_paths_count}
+    Max stabilizer weight: {self.max_stabilizer_weight}
+    Min stabilizer weight: {self.min_stabilizer_weight}
+    Median stabilizer weight: {self.me_stabilizer_weight}
+    Average stabilizer weight: {self.avg_stabilizer_weight}"""
