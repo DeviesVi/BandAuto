@@ -282,14 +282,11 @@ class BaseBuilder(ABC):
                 super_stabilizer_count_z += stabilizer_group.total_stabilizer_count_z
                 super_stabilizer_weight_x_sum += stabilizer_group.total_stabilizer_weight_x
                 super_stabilizer_weight_z_sum += stabilizer_group.total_stabilizer_weight_z
-                if global_stabilizer_weights['max_x'] is None or stabilizer_group.max_stabilizer_weight_x > global_stabilizer_weights['max_x']:
-                    global_stabilizer_weights['max_x'] = stabilizer_group.max_stabilizer_weight_x
-                if global_stabilizer_weights['max_z'] is None or stabilizer_group.max_stabilizer_weight_z > global_stabilizer_weights['max_z']:
-                    global_stabilizer_weights['max_z'] = stabilizer_group.max_stabilizer_weight_z
-                if global_stabilizer_weights['min_x'] is None or stabilizer_group.min_stabilizer_weight_x < global_stabilizer_weights['min_x']:
-                    global_stabilizer_weights['min_x'] = stabilizer_group.min_stabilizer_weight_x
-                if global_stabilizer_weights['min_z'] is None or stabilizer_group.min_stabilizer_weight_z < global_stabilizer_weights['min_z']:
-                    global_stabilizer_weights['min_z'] = stabilizer_group.min_stabilizer_weight_z
+
+        global_stabilizer_weights['max_x'] = max([stabilizer_group.max_stabilizer_weight_x for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
+        global_stabilizer_weights['max_z'] = max([stabilizer_group.max_stabilizer_weight_z for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
+        global_stabilizer_weights['min_x'] = min([stabilizer_group.min_stabilizer_weight_x for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
+        global_stabilizer_weights['min_z'] = min([stabilizer_group.min_stabilizer_weight_z for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
         global_stabilizer_weights['avg_x'] = super_stabilizer_weight_x_sum / super_stabilizer_count_x
         global_stabilizer_weights['avg_z'] = super_stabilizer_weight_z_sum / super_stabilizer_count_z
 
