@@ -254,6 +254,9 @@ class BaseBuilder(ABC):
                 elif self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.GLOBALAVG:
                     x_weight = global_stabilizer_weights['avg_x']
                     z_weight = global_stabilizer_weights['avg_z']
+                elif self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.SPEC:
+                    x_weight = 1
+                    z_weight = 1
                 stabilizer_group.max_holding_cycle['X'] = self._builder_options.stabilizer_group_holding_cycle_ratio * x_weight
                 stabilizer_group.max_holding_cycle['Z'] = self._builder_options.stabilizer_group_holding_cycle_ratio * z_weight
             else:

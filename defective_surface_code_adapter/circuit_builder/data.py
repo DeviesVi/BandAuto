@@ -12,6 +12,7 @@ class HoldingCycleOption(Enum):
     GLOBALMIN = 'globalmin'
     GLOBALMAX = 'globalmax'
     GLOBALAVG = 'globalavg'
+    SPEC = 'spec' # Specified by stabilizer_group_holding_cycle_ratio
 
 class OPType(Enum):
     INIT = 'INIT'
