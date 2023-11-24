@@ -21,20 +21,45 @@ class Analyzer:
 
         super_stabilizer_weights = [len(cls._data_in_stabilizer(stabilizer)) for stabilizer in cls._adapt_result.stabilizers if len(stabilizer) > 1]
         super_stabilizer_weights.sort()
+        super_stabilizer_weights_x = [len(cls._data_in_stabilizer(stabilizer)) for stabilizer in cls._adapt_result.stabilizers if len(stabilizer) > 1 and cls._get_stabilizer_type(stabilizer) == 'X']
+        super_stabilizer_weights_x.sort()
+        super_stabilizer_weights_z = [len(cls._data_in_stabilizer(stabilizer)) for stabilizer in cls._adapt_result.stabilizers if len(stabilizer) > 1 and cls._get_stabilizer_type(stabilizer) == 'Z']
+        super_stabilizer_weights_z.sort()
+
         max_stabilizer_weight = super_stabilizer_weights[-1]
         min_stabilizer_weight = super_stabilizer_weights[0]
         me_stabilizer_weight = super_stabilizer_weights[len(super_stabilizer_weights)//2]
         avg_stabilizer_weight = np.mean(super_stabilizer_weights)
+
+        max_stabilizer_weight_x = super_stabilizer_weights_x[-1]
+        min_stabilizer_weight_x = super_stabilizer_weights_x[0]
+        me_stabilizer_weight_x = super_stabilizer_weights_x[len(super_stabilizer_weights_x)//2]
+        avg_stabilizer_weight_x = np.mean(super_stabilizer_weights_x)
+
+        max_stabilizer_weight_z = super_stabilizer_weights_z[-1]
+        min_stabilizer_weight_z = super_stabilizer_weights_z[0]
+        me_stabilizer_weight_z = super_stabilizer_weights_z[len(super_stabilizer_weights_z)//2]
+        avg_stabilizer_weight_z = np.mean(super_stabilizer_weights_z)
 
         return AnalysisResult(
             x_distance=x_shortest_distance,
             x_shortest_paths_count=x_shortest_paths_count,
             z_distance=z_shortest_distance,
             z_shortest_paths_count=z_shortest_paths_count,
-            max_stabilizer_weight=max_stabilizer_weight,
-            min_stabilizer_weight=min_stabilizer_weight,
-            me_stabilizer_weight=me_stabilizer_weight,
-            avg_stabilizer_weight=avg_stabilizer_weight
+            stabilizer_statistics={
+                'max_stabilizer_weight': max_stabilizer_weight,
+                'min_stabilizer_weight': min_stabilizer_weight,
+                'me_stabilizer_weight': me_stabilizer_weight,
+                'avg_stabilizer_weight': avg_stabilizer_weight,
+                'max_stabilizer_weight_x': max_stabilizer_weight_x,
+                'min_stabilizer_weight_x': min_stabilizer_weight_x,
+                'me_stabilizer_weight_x': me_stabilizer_weight_x,
+                'avg_stabilizer_weight_x': avg_stabilizer_weight_x,
+                'max_stabilizer_weight_z': max_stabilizer_weight_z,
+                'min_stabilizer_weight_z': min_stabilizer_weight_z,
+                'me_stabilizer_weight_z': me_stabilizer_weight_z,
+                'avg_stabilizer_weight_z': avg_stabilizer_weight_z,
+            }
         )
     
     @classmethod
