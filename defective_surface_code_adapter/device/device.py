@@ -126,10 +126,11 @@ class Device:
 
         center = (self.data_width, self.data_height)
         radius = (diameter - 1) // 2
-        # Add defect to odd coordinate qubit within the radius.
-        for x in range(center[0]-radius, center[0]+radius+1, 2):
-            for y in range(center[1]-radius, center[1]+radius+1, 2):
-                self.graph.nodes[(x, y)]['defective'] = True        
+        coord_radius = 2 * radius
+        # Add defect to odd coordinate qubit within the coord_radius.
+        for x in range(center[0] - coord_radius, center[0] + coord_radius + 1, 2):
+            for y in range(center[1] - coord_radius, center[1] + coord_radius + 1, 2):
+                self.graph.nodes[(x, y)]['defective'] = True      
 
     def save(self, path: str):
         """Save the device to a file.
