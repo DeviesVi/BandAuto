@@ -1,7 +1,7 @@
 """Base constructor to build circuits for the surface code."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, List
+from typing import Dict, List, Set
 from math import floor
 from functools import cached_property
 
@@ -156,7 +156,7 @@ class BaseBuilder(ABC):
         """Get data qubit."""
         coord_offset = self._builder_options.syndrome_measurement_pattern[self._get_node_type(syndrome)][pattern]
         data_qubit = (syndrome[0] + coord_offset[0], syndrome[1] + coord_offset[1])
-        if data_qubit not in self._data_qubits:
+        if data_qubit not in self._data_qubits_set:
             return None
         if self._is_disabled_node(data_qubit):
             return None
@@ -298,7 +298,7 @@ class BaseBuilder(ABC):
     # Utility methods
     def _is_disabled_node(self, node: tuple) -> bool:
         """Check if the node is disabled"""
-        return node in self.adapt_result.disabled_nodes
+        return node in self._disabled_node_set
     
     @cached_property
     def _all_qubits(self) -> List[tuple]:
@@ -306,10 +306,20 @@ class BaseBuilder(ABC):
         return [node for node in self.device.graph.nodes if not self._is_disabled_node(node)]
     
     @cached_property
+    def _disabled_node_set(self) -> Set[tuple]:
+        """Get all disabled nodes."""
+        return set(self.adapt_result.disabled_nodes)
+    
+    @cached_property
     def _data_qubits(self) -> List[tuple]:
         """Get all undisabled data qubits."""
         return [node for node in self.device.graph.nodes if self._get_node_type(node) == 'D' and not self._is_disabled_node(node)]
     
+    @cached_property
+    def _data_qubits_set(self) -> Set[tuple]:
+        """Get all undisabled data qubits."""
+        return set(self._data_qubits)
+
     @cached_property
     def _syndromes(self) -> List[tuple]:
         """Get all undisabled syndromes."""
