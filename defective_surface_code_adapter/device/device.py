@@ -78,6 +78,13 @@ class Device:
 
         self.graph = graph
 
+    def clear_all_defect(self):
+        """Clear all defect on the device."""
+        for node in self.graph.nodes:
+            self.graph.nodes[node]['defective'] = False
+        for edge in self.graph.edges:
+            self.graph.edges[edge]['defective'] = False
+
     @staticmethod
     def _randomTrue(prob_true: float):
         return bool(np.random.choice([False, True], p=[1-prob_true, prob_true]))
@@ -89,6 +96,8 @@ class Device:
                 coupler_defect_rate: The probability of a coupler is defective.
                 exact_rate: If True, the defect rate will be exactly qubit_defect_rate and coupler_defect_rate.
         """
+        self.clear_all_defect()
+
         self.qubit_defect_rate = qubit_defect_rate
         self.coupler_defect_rate = coupler_defect_rate
         self.exact_rate = exact_rate
@@ -105,6 +114,22 @@ class Device:
                 self.graph.nodes[node]['defective'] = True
             for edge in np.random.choice(list(self.graph.edges), coupler_defect_num, replace=False):
                 self.graph.edges[edge]['defective'] = True
+
+    def add_center_defect(self, diameter: int):
+        """Add defect on the center of the device with cirtain diameter.
+            Args:
+                diameter: The diameter of the defect.
+        """
+        assert self.data_height % 2 == 1 and self.data_width % 2 == 1, 'The device must be odd size.'
+        assert diameter % 2 == 1, 'The diameter must be odd size.'
+        self.clear_all_defect()
+
+        center = (self.data_width, self.data_height)
+        radius = (diameter - 1) // 2
+        # Add defect to odd coordinate qubit within the radius.
+        for x in range(center[0]-radius, center[0]+radius+1, 2):
+            for y in range(center[1]-radius, center[1]+radius+1, 2):
+                self.graph.nodes[(x, y)]['defective'] = True        
 
     def save(self, path: str):
         """Save the device to a file.
