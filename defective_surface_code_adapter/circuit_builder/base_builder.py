@@ -27,7 +27,6 @@ class BaseBuilder(ABC):
 
         # Builder preprocessing
         self._prepare_stabilizers(self.adapt_result.stabilizers)
-        self._prepare_stabilizer_lookup_table()
         self._prepare_stabilizer_groups()
 
         self.circuit = None
@@ -42,14 +41,6 @@ class BaseBuilder(ABC):
         stabilizer_ = Stabilizer(self._get_stabilizer_type(stabilizer), stabilizer)
         stabilizer_.data_qubits = self._data_in_stabilizer(stabilizer)
         return stabilizer_
-    
-    def _prepare_stabilizer_lookup_table(self):
-        """Prepare stabilizer lookup table."""
-        self._stabilizer_lookup_table = {}
-        # Lookup stabilizer by syndrome.
-        for stabilizer in self._stabilizers:
-            for syndrome in stabilizer.syndromes:
-                self._stabilizer_lookup_table[syndrome] = stabilizer
 
     def _prepare_stabilizer_groups(self):
         """Prepare stabilizer groups."""
@@ -231,7 +222,8 @@ class BaseBuilder(ABC):
 
     def _init_stabilizer_groups(self, initial_state):
         """Initialize stabilizer groups."""
-        global_stabilizer_weights = self._collect_stabilizer_groups_info()
+        global_stabilizer_weights = self._stabilizer_groups_info
+        first_cycle_super_stabilizer_type = self._builder_options.first_cycle_super_stabilizer_type[initial_state]
 
         for stabilizer_group in self._stabilizer_groups:
             if stabilizer_group.is_super_stabilizer_group:
@@ -257,43 +249,12 @@ class BaseBuilder(ABC):
                 elif self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.SPEC:
                     x_weight = 1
                     z_weight = 1
-                stabilizer_group.max_holding_cycle['X'] = self._builder_options.stabilizer_group_holding_cycle_ratio * x_weight
-                stabilizer_group.max_holding_cycle['Z'] = self._builder_options.stabilizer_group_holding_cycle_ratio * z_weight
+                max_holding_cycle_x = self._builder_options.stabilizer_group_holding_cycle_ratio * x_weight
+                max_holding_cycle_z = self._builder_options.stabilizer_group_holding_cycle_ratio * z_weight
+                stabilizer_group.init(max_holding_cycle_x, max_holding_cycle_z, first_cycle_super_stabilizer_type)
             else:
                 # Non-super stabilizer groups, do nothing.
                 pass
-
-    def _collect_stabilizer_groups_info(self) -> Dict[str, int|float]:
-        # Collect weight data of all stabilizer groups.
-        global_stabilizer_weights = {
-            'max_x': None,
-            'max_z': None,
-            'min_x': None,
-            'min_z': None,
-            'avg_x': None,
-            'avg_z': None
-        }
-
-        super_stabilizer_count_x = 0
-        super_stabilizer_count_z = 0
-        super_stabilizer_weight_x_sum = 0
-        super_stabilizer_weight_z_sum = 0
-
-        for stabilizer_group in self._stabilizer_groups:
-            if stabilizer_group.is_super_stabilizer_group:
-                super_stabilizer_count_x += stabilizer_group.total_stabilizer_count_x
-                super_stabilizer_count_z += stabilizer_group.total_stabilizer_count_z
-                super_stabilizer_weight_x_sum += stabilizer_group.total_stabilizer_weight_x
-                super_stabilizer_weight_z_sum += stabilizer_group.total_stabilizer_weight_z
-
-        global_stabilizer_weights['max_x'] = max([stabilizer_group.max_stabilizer_weight_x for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
-        global_stabilizer_weights['max_z'] = max([stabilizer_group.max_stabilizer_weight_z for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
-        global_stabilizer_weights['min_x'] = min([stabilizer_group.min_stabilizer_weight_x for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
-        global_stabilizer_weights['min_z'] = min([stabilizer_group.min_stabilizer_weight_z for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
-        global_stabilizer_weights['avg_x'] = super_stabilizer_weight_x_sum / super_stabilizer_count_x
-        global_stabilizer_weights['avg_z'] = super_stabilizer_weight_z_sum / super_stabilizer_count_z
-
-        return global_stabilizer_weights
 
     # Utility methods
     def _is_disabled_node(self, node: tuple) -> bool:
@@ -425,6 +386,50 @@ class BaseBuilder(ABC):
             return False
         # If two syndromes share odd number of data qubits, they are conflict.
         return len(set(self._data_in_syndrome(syndromes1)) & set(self._data_in_syndrome(syndromes2))) % 2 == 1
+
+    @cached_property
+    def _stabilizer_lookup_table(self):
+        """Prepare stabilizer lookup table."""
+        stabilizer_lookup_table = {}
+        # Lookup stabilizer by syndrome.
+        for stabilizer in self._stabilizers:
+            for syndrome in stabilizer.syndromes:
+                stabilizer_lookup_table[syndrome] = stabilizer
+
+        return stabilizer_lookup_table
+
+    @cached_property
+    def _stabilizer_groups_info(self) -> Dict[str, int|float]:
+        # Collect weight data of all stabilizer groups.
+        global_stabilizer_weights = {
+            'max_x': None,
+            'max_z': None,
+            'min_x': None,
+            'min_z': None,
+            'avg_x': None,
+            'avg_z': None
+        }
+
+        super_stabilizer_count_x = 0
+        super_stabilizer_count_z = 0
+        super_stabilizer_weight_x_sum = 0
+        super_stabilizer_weight_z_sum = 0
+
+        for stabilizer_group in self._stabilizer_groups:
+            if stabilizer_group.is_super_stabilizer_group:
+                super_stabilizer_count_x += stabilizer_group.total_stabilizer_count_x
+                super_stabilizer_count_z += stabilizer_group.total_stabilizer_count_z
+                super_stabilizer_weight_x_sum += stabilizer_group.total_stabilizer_weight_x
+                super_stabilizer_weight_z_sum += stabilizer_group.total_stabilizer_weight_z
+
+        global_stabilizer_weights['max_x'] = max([stabilizer_group.max_stabilizer_weight_x for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
+        global_stabilizer_weights['max_z'] = max([stabilizer_group.max_stabilizer_weight_z for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
+        global_stabilizer_weights['min_x'] = min([stabilizer_group.min_stabilizer_weight_x for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
+        global_stabilizer_weights['min_z'] = min([stabilizer_group.min_stabilizer_weight_z for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
+        global_stabilizer_weights['avg_x'] = super_stabilizer_weight_x_sum / super_stabilizer_count_x
+        global_stabilizer_weights['avg_z'] = super_stabilizer_weight_z_sum / super_stabilizer_count_z
+
+        return global_stabilizer_weights
 
     # Abstract methods
     @abstractmethod

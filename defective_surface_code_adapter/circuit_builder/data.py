@@ -138,10 +138,17 @@ class StabilizerGroup:
 
         # These property only used for super stabilizer groups.
         self.max_holding_cycle = {
-            'X': 0,
-            'Z': 0,
+            'X': None,
+            'Z': None,
         }
-        self.current_holding_type = 'X'
+        self.current_holding_type = None
+        self.current_holding_cycle = None
+
+    def init(self, max_holding_cycle_x: float, max_holding_cycle_z: float, first_cycle_super_stabilizer_type: str):
+        """Initialize the stabilizer group."""
+        self.max_holding_cycle['X'] = max_holding_cycle_x
+        self.max_holding_cycle['Z'] = max_holding_cycle_z
+        self.current_holding_type = first_cycle_super_stabilizer_type
         self.current_holding_cycle = 0
 
     def gen_stabilizers_for_1cycle(self):

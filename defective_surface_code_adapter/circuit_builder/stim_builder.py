@@ -49,12 +49,12 @@ class StimBuilder(BaseBuilder):
         if initial_state == '1':
             for node in self._logical_x_data_qubits:
                 self.circuit_buffer.write(f'X {self._node_index[node]}\n')
-                self._operated_qubits_this_time_step.append(node)
+                self._operated_qubits_this_time_step.add(node)
             
         elif initial_state == '-':
             for node in self._logical_z_data_qubits:
                 self.circuit_buffer.write(f'Z {self._node_index[node]}\n')
-                self._operated_qubits_this_time_step.append(node)
+                self._operated_qubits_this_time_step.add(node)
 
         self._op_this_time_step = OPType.U1
     
