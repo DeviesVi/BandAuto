@@ -190,7 +190,8 @@ class StimBuilder(BaseBuilder):
             else:
                 self.circuit_buffer.write(f'DETECTOR')
                 for syndrome in stabilizer.syndromes:
-                    self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-1])}]')
+                    if len(self._stabilizer_cycle_records[stabilizer]) > 0:
+                        self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-1])}]')
                 for data in stabilizer.data_qubits:
                     self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]')
                 self.circuit_buffer.write('\n')
@@ -199,15 +200,18 @@ class StimBuilder(BaseBuilder):
                 for syndrome in stabilizer.syndromes:
                     self.circuit_buffer.write(f'DETECTOR')
                     self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._max_cycle - 1)}]')
-                    self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._max_cycle - 2)}]')
+                    if self._max_cycle - 2 in self._stabilizer_cycle_records[stabilizer]:
+                        self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._max_cycle - 2)}]')
                     for data in self._data_in_syndrome(syndrome):
                         self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]')
                     self.circuit_buffer.write('\n')
             else:
                 self.circuit_buffer.write(f'DETECTOR')
                 for syndrome in stabilizer.syndromes:
-                    self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-1])}]')
-                    self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-2])}]')
+                    if len(self._stabilizer_cycle_records[stabilizer]) > 0:
+                        self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-1])}]')
+                    if len(self._stabilizer_cycle_records[stabilizer]) > 1:    
+                        self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-2])}]')
                 for data in stabilizer.data_qubits:
                     self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]')
                 self.circuit_buffer.write('\n')
