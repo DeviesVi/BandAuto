@@ -249,8 +249,13 @@ class BaseBuilder(ABC):
                 elif self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.SPEC:
                     x_weight = 1
                     z_weight = 1
-                max_holding_cycle_x = self._builder_options.stabilizer_group_holding_cycle_ratio * x_weight
-                max_holding_cycle_z = self._builder_options.stabilizer_group_holding_cycle_ratio * z_weight
+
+                ratio = self._builder_options.stabilizer_group_holding_cycle_ratio
+                offset = self._builder_options.stabilizer_group_holding_cycle_offset
+
+                max_holding_cycle_x = self._builder_options.stabilizer_group_holding_cycle_function(x_weight, ratio, offset)
+                max_holding_cycle_z = self._builder_options.stabilizer_group_holding_cycle_function(z_weight, ratio, offset)
+                
                 stabilizer_group.init(max_holding_cycle_x, max_holding_cycle_z, first_cycle_super_stabilizer_type)
             else:
                 # Non-super stabilizer groups, do nothing.

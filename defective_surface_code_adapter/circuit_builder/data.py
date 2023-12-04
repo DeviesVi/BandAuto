@@ -1,6 +1,7 @@
 from collections import defaultdict
 import dataclasses
-from typing import List, Dict, DefaultDict
+from math import floor
+from typing import List, Dict, Callable
 from functools import cached_property
 from enum import Enum
 
@@ -94,7 +95,9 @@ class BuilderOptions:
     } # Do not modify this option.
 
     stabilizer_group_holding_cycle_option = HoldingCycleOption.MAX
-    stabilizer_group_holding_cycle_ratio = 0.25
+    stabilizer_group_holding_cycle_ratio: float = 0.25
+    stabilizer_group_holding_cycle_offset: float = 0.001
+    stabilizer_group_holding_cycle_function: Callable[[int, float, float], int] = lambda w, r, o: floor(w * r + o)
     u1gate = U1Gate.H
     u2gate = U2Gate.CZ
 
@@ -158,9 +161,10 @@ class StabilizerGroup:
             self.current_holding_cycle += 1
 
             # If current holding cycle exceeds max holding cycle, switch to the other type.
+            assert isinstance(self.max_holding_cycle[self.current_holding_type], int), f"Max holding cycle for stabilizer type {self.current_holding_type} is not an integer."
             if self.current_holding_cycle >= self.max_holding_cycle[self.current_holding_type]:
                 self.current_holding_type = 'Z' if self.current_holding_type == 'X' else 'X'
-                self.current_holding_cycle -= self.max_holding_cycle[self.current_holding_type]
+                self.current_holding_cycle = 0
         else:
             self._this_cycle_stabilizers = self.stabilizers
         return self._this_cycle_stabilizers
