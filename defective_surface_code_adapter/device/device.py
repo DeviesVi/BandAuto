@@ -89,14 +89,15 @@ class Device:
     def _randomTrue(prob_true: float):
         return bool(np.random.choice([False, True], p=[1-prob_true, prob_true]))
     
-    def add_random_defect(self, qubit_defect_rate: float, coupler_defect_rate: float, exact_rate: bool = False):
+    def add_random_defect(self, qubit_defect_rate: float, coupler_defect_rate: float, exact_rate: bool = False, clear_defect: bool = True):
         """Add random defect to the device.
             Args:
                 qubit_defect_rate: The probability of a qubit is defective.
                 coupler_defect_rate: The probability of a coupler is defective.
                 exact_rate: If True, the defect rate will be exactly qubit_defect_rate and coupler_defect_rate.
         """
-        self.clear_all_defect()
+        if clear_defect:
+            self.clear_all_defect()
 
         self.qubit_defect_rate = qubit_defect_rate
         self.coupler_defect_rate = coupler_defect_rate
@@ -115,14 +116,15 @@ class Device:
             for edge in np.random.choice(list(self.graph.edges), coupler_defect_num, replace=False):
                 self.graph.edges[edge]['defective'] = True
 
-    def add_center_defect(self, diameter: int):
+    def add_center_defect(self, diameter: int, clear_defect: bool = True):
         """Add defect on the center of the device with cirtain diameter.
             Args:
                 diameter: The diameter of the defect.
         """
         assert self.data_height % 2 == 1 and self.data_width % 2 == 1, 'The device must be odd size.'
         assert diameter % 2 == 1, 'The diameter must be odd size.'
-        self.clear_all_defect()
+        if clear_defect:
+            self.clear_all_defect()
 
         center = (self.data_width, self.data_height)
         radius = (diameter - 1) // 2
@@ -131,6 +133,24 @@ class Device:
         for x in range(center[0] - coord_radius, center[0] + coord_radius + 1, 2):
             for y in range(center[1] - coord_radius, center[1] + coord_radius + 1, 2):
                 self.graph.nodes[(x, y)]['defective'] = True      
+
+    def add_ractangle_defect(self, x: int, y: int, width: int, height: int, clear_defect: bool = True):
+        """Add defect on the rectangle area.
+            Args:
+                x: The x coordinate of the left bottom corner of the rectangle.
+                y: The y coordinate of the left bottom corner of the rectangle.
+                width: The width of the rectangle.
+                height: The height of the rectangle.
+        """
+        assert x >= 0 and y >= 0 and width >= 0 and height >= 0, 'The coordinate and size must be positive.'
+
+        if clear_defect:
+            self.clear_all_defect()
+
+        for x in range(x, x + 2 * width, 2):
+            for y in range(y, y + 2 * height, 2):
+                if (x, y) in self.graph.nodes:
+                    self.graph.nodes[(x, y)]['defective'] = True
 
     def save(self, path: str):
         """Save the device to a file.
