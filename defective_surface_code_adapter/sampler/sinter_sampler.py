@@ -30,6 +30,8 @@ class SinterSampler:
         physical_errors_list: List[PhysicalErrors],
         holding_cycle_option: HoldingCycleOption = HoldingCycleOption.MAX,
         holding_cycle_ratio: float = 0.25,
+        holding_cycle_ratio_x: float | None = None,
+        holding_cycle_ratio_z: float | None = None,
         metadata: Dict[str, Any] = {},
     ) -> Generator[sinter.Task, None, None]:
         for physical_errors in physical_errors_list:
@@ -37,6 +39,8 @@ class SinterSampler:
             options.physical_errors = physical_errors
             options.stabilizer_group_holding_cycle_option = holding_cycle_option
             options.stabilizer_group_holding_cycle_ratio = holding_cycle_ratio
+            options.stabilizer_group_holding_cycle_ratio_x = holding_cycle_ratio_x
+            options.stabilizer_group_holding_cycle_ratio_z = holding_cycle_ratio_z
             builder = StimBuilder(device, options)
             for initial_state in initial_states:
                 for cycle in cycles:

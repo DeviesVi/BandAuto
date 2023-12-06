@@ -103,6 +103,33 @@ class BuilderOptions:
 
     physical_errors = PhysicalErrors.ratio_google_error(1)
 
+    
+    _stabilizer_group_holding_cycle_ratio_x: float | None = None
+    _stabilizer_group_holding_cycle_ratio_z: float | None = None
+
+    @property
+    def stabilizer_group_holding_cycle_ratio_x(self) -> float:
+        if self._stabilizer_group_holding_cycle_ratio_x is None:
+            return self.stabilizer_group_holding_cycle_ratio
+        
+        return self._stabilizer_group_holding_cycle_ratio_x
+    
+    @stabilizer_group_holding_cycle_ratio_x.setter
+    def stabilizer_group_holding_cycle_ratio_x(self, value: float):
+        self._stabilizer_group_holding_cycle_ratio_x = value
+
+    @property
+    def stabilizer_group_holding_cycle_ratio_z(self) -> float:
+        if self._stabilizer_group_holding_cycle_ratio_z is None:
+            return self.stabilizer_group_holding_cycle_ratio
+        
+        return self._stabilizer_group_holding_cycle_ratio_z
+    
+    @stabilizer_group_holding_cycle_ratio_z.setter
+    def stabilizer_group_holding_cycle_ratio_z(self, value: float):
+        self._stabilizer_group_holding_cycle_ratio_z = value
+
+
 class Stabilizer:
     """A stabilizer."""
     stabilizers_count = 0
