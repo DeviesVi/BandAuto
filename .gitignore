@@ -2,7 +2,7 @@ __pycache__
 ignored_files
 cache
 .vscode
-devices
+/devices
 test.svg
 circuit.txt
 TODO.md
