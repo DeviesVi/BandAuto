@@ -3,3 +3,8 @@ ignored_files
 cache
 .vscode
 devices
+test.svg
+circuit.txt
+TODO.md
+old_analysis
+old_samples
