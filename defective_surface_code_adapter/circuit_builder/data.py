@@ -74,10 +74,12 @@ class PhysicalErrors:
 @dataclasses.dataclass
 class BuilderOptions:
     """Options for the circuit builder."""
+
     syndrome_measurement_pattern = {
         'X':[[-1,1],[-1,-1],[1,1],[1,-1]],
         'Z':[[-1,1],[1,1],[-1,-1],[1,-1]],
     }
+
     syndrome_reset = True
     
     first_cycle_super_stabilizer_type = {
@@ -94,18 +96,18 @@ class BuilderOptions:
         '-': 'X',
     } # Do not modify this option.
 
-    stabilizer_group_holding_cycle_option = HoldingCycleOption.MAX
-    stabilizer_group_holding_cycle_ratio: float = 0.25
-    stabilizer_group_holding_cycle_offset: float = 0.001
-    stabilizer_group_holding_cycle_function: Callable[[int, float, float], int] = lambda w, r, o: floor(w * r + o)
+    stabilizer_group_holding_cycle_option = HoldingCycleOption.GLOBALAVG
+    stabilizer_group_holding_cycle_ratio = 0.25
+    stabilizer_group_holding_cycle_offset = 0.001
     u1gate = U1Gate.H
     u2gate = U2Gate.CZ
 
     physical_errors = PhysicalErrors.ratio_google_error(1)
 
-    
-    _stabilizer_group_holding_cycle_ratio_x: float | None = None
-    _stabilizer_group_holding_cycle_ratio_z: float | None = None
+    def __post_init__(self) -> None:
+        """Post init."""
+        self._stabilizer_group_holding_cycle_ratio_x: float | None = None
+        self._stabilizer_group_holding_cycle_ratio_z: float | None = None
 
     @property
     def stabilizer_group_holding_cycle_ratio_x(self) -> float:
@@ -129,6 +131,9 @@ class BuilderOptions:
     def stabilizer_group_holding_cycle_ratio_z(self, value: float):
         self._stabilizer_group_holding_cycle_ratio_z = value
 
+    def stabilizer_group_holding_cycle_function(self, weight: int, ratio: float, offset: float) -> int:
+        """Get stabilizer group holding cycle from linear function."""
+        return floor(weight * ratio + offset)
 
 class Stabilizer:
     """A stabilizer."""

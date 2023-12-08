@@ -28,8 +28,8 @@ class SinterSampler:
         cycles: List[int],
         initial_states: List[str],
         physical_errors_list: List[PhysicalErrors],
-        holding_cycle_option: HoldingCycleOption = HoldingCycleOption.MAX,
-        holding_cycle_ratio: float = 0.25,
+        holding_cycle_ratio: float,
+        holding_cycle_option: HoldingCycleOption = HoldingCycleOption.GLOBALAVG,
         holding_cycle_ratio_x: float | None = None,
         holding_cycle_ratio_z: float | None = None,
         metadata: Dict[str, Any] = {},
@@ -48,7 +48,7 @@ class SinterSampler:
                     yield sinter.Task(
                         circuit=stim.Circuit(circuit),
                         json_metadata={
-                            "device": device.to_dict(),
+                            "device": device.strong_id,
                             "cycle": cycle,
                             "initial_state": initial_state,
                             "physical_errors": physical_errors.to_dict(),

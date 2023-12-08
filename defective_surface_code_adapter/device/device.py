@@ -5,6 +5,7 @@ import numpy as np
 import dataclasses
 import pickle
 from typing import List, Optional
+import hashlib
 
 @dataclasses.dataclass
 class Device:
@@ -24,13 +25,29 @@ class Device:
 
     data_height: int
     data_width: int
-    qubit_defect_rate: float = 0.0
-    coupler_defect_rate: float = 0.0
-    exact_rate: bool = False
+    
+    @property
+    def qubit_defect_rate(self) -> float:
+        return self._qubit_defect_rate
+    
+    @property
+    def coupler_defect_rate(self) -> float:
+        return self._coupler_defect_rate
+    
+    @property
+    def exact_rate(self) -> bool:
+        return self._exact_rate
 
     def to_dict(self) -> dict:
         """Convert to dict."""
-        return dataclasses.asdict(self)
+        return {
+            'data_height': self.data_height,
+            'data_width': self.data_width,
+            'qubit_defect_rate': self.qubit_defect_rate,
+            'coupler_defect_rate': self.coupler_defect_rate,
+            'exact_rate': self.exact_rate,
+            'strong_id': self.strong_id
+        }
 
     def __post_init__(self) -> None:
         # Create connectivity graph for rotated lattice.
@@ -42,6 +59,10 @@ class Device:
             edge attribute: Dict
                 defective(boolean): Coupler defect flag, True for a defective coupler.
         """
+
+        self._qubit_defect_rate: float = 0.0
+        self._coupler_defect_rate: float = 0.0
+        self._exact_rate: bool = False
 
         # Calculate the coordinate for data qubit, x measument qubit and z measurement qubit.
         data_qubit = [(x, y) for x in range(1, 2*self.data_width, 2)
@@ -99,9 +120,9 @@ class Device:
         if clear_defect:
             self.clear_all_defect()
 
-        self.qubit_defect_rate = qubit_defect_rate
-        self.coupler_defect_rate = coupler_defect_rate
-        self.exact_rate = exact_rate
+        self._qubit_defect_rate = qubit_defect_rate
+        self._coupler_defect_rate = coupler_defect_rate
+        self._exact_rate = exact_rate
 
         if not exact_rate:
             for node in self.graph.nodes:
@@ -172,3 +193,8 @@ class Device:
     
     def __repr__(self) -> str:
         return f'Device({self.data_height}, {self.data_width})'
+    
+    @property
+    def strong_id(self) -> str:
+        "Cryptographic hash of the device."
+        return hashlib.sha256(pickle.dumps(self)).hexdigest()
