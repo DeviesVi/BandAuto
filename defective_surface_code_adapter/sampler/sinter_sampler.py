@@ -11,8 +11,8 @@ class SinterSampler:
 
     def __init__(
         self,
-        max_shots: int = 1000000,
-        max_errors: int = 1000,
+        max_shots: int = 1_000_000,
+        max_errors: int = 1_000,
         num_workers: int = 4,
         decoders: List[str] = ["pymatching"],
     ):
@@ -49,8 +49,7 @@ class SinterSampler:
             options.stabilizer_group_specified_holding_cycle_z = specified_holding_cycle_z
 
             if holding_cycle_option == HoldingCycleOption.SPEC:
-                assert specified_holding_cycle_x is not None
-                assert specified_holding_cycle_z is not None
+                assert specified_holding_cycle is not None or specified_holding_cycle_x is not None and specified_holding_cycle_z is not None                
             else:
                 assert holding_cycle_ratio is not None or holding_cycle_ratio_x is not None and holding_cycle_ratio_z is not None
 
@@ -61,10 +60,18 @@ class SinterSampler:
                     yield sinter.Task(
                         circuit=stim.Circuit(circuit),
                         json_metadata={
-                            "device": device.strong_id,
+                            "device_id": device.strong_id,
+                            "device": device.to_dict(),
                             "cycle": cycle,
                             "initial_state": initial_state,
                             "physical_errors": physical_errors.to_dict(),
+                            "holding_cycle_option": holding_cycle_option.name,
+                            "holding_cycle_ratio": holding_cycle_ratio,
+                            "holding_cycle_ratio_x": holding_cycle_ratio_x,
+                            "holding_cycle_ratio_z": holding_cycle_ratio_z,
+                            "specified_holding_cycle": specified_holding_cycle,
+                            "specified_holding_cycle_x": specified_holding_cycle_x,
+                            "specified_holding_cycle_z": specified_holding_cycle_z,
                             **metadata,
                         },
                     )

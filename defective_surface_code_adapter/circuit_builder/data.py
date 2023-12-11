@@ -42,7 +42,9 @@ class PhysicalErrors:
     
     @staticmethod
     def SI1000_from_p(p: float) -> 'PhysicalErrors':
-        """Get SI1000 error model from p."""
+        """Get SI1000 error model from p.
+            SI1000 from: https://arxiv.org/abs/2202.11845
+        """
         return PhysicalErrors(
             u1 = 0.1 * p,
             u2 = p,
@@ -158,7 +160,7 @@ class BuilderOptions:
     
     @stabilizer_group_specified_holding_cycle_z.setter
     def stabilizer_group_specified_holding_cycle_z(self, value: int):
-        self._stabilizer_group_specified_holding_cycle_z = value   
+        self._stabilizer_group_specified_holding_cycle_z = value
     
 
 class Stabilizer:
