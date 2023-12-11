@@ -99,8 +99,7 @@ class BuilderOptions:
     stabilizer_group_holding_cycle_option = HoldingCycleOption.GLOBALAVG
     stabilizer_group_holding_cycle_ratio = 0.25
     stabilizer_group_holding_cycle_offset = 0.000
-    stabilizer_group_specified_holding_cycle_x = 1
-    stabilizer_group_specified_holding_cycle_z = 1
+    stabilizer_group_specified_holding_cycle = 1
     u1gate = U1Gate.H
     u2gate = U2Gate.CZ
 
@@ -110,6 +109,8 @@ class BuilderOptions:
         """Post init."""
         self._stabilizer_group_holding_cycle_ratio_x: float | None = None
         self._stabilizer_group_holding_cycle_ratio_z: float | None = None
+        self._stabilizer_group_specified_holding_cycle_x: int | None = None
+        self._stabilizer_group_specified_holding_cycle_z: int | None = None
 
     @property
     def stabilizer_group_holding_cycle_ratio_x(self) -> float:
@@ -136,6 +137,29 @@ class BuilderOptions:
     def stabilizer_group_holding_cycle_function(self, weight: int, ratio: float, offset: float) -> int:
         """Get stabilizer group holding cycle from linear function."""
         return floor(weight * ratio + offset)
+    
+    @property
+    def stabilizer_group_specified_holding_cycle_x(self) -> int:
+        if self._stabilizer_group_specified_holding_cycle_x is None:
+            return self.stabilizer_group_specified_holding_cycle
+        
+        return self._stabilizer_group_specified_holding_cycle_x
+    
+    @stabilizer_group_specified_holding_cycle_x.setter
+    def stabilizer_group_specified_holding_cycle_x(self, value: int):
+        self._stabilizer_group_specified_holding_cycle_x = value
+
+    @property
+    def stabilizer_group_specified_holding_cycle_z(self) -> int:
+        if self._stabilizer_group_specified_holding_cycle_z is None:
+            return self.stabilizer_group_specified_holding_cycle
+        
+        return self._stabilizer_group_specified_holding_cycle_z
+    
+    @stabilizer_group_specified_holding_cycle_z.setter
+    def stabilizer_group_specified_holding_cycle_z(self, value: int):
+        self._stabilizer_group_specified_holding_cycle_z = value   
+    
 
 class Stabilizer:
     """A stabilizer."""

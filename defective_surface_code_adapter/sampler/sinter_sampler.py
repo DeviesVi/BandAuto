@@ -32,6 +32,7 @@ class SinterSampler:
         holding_cycle_ratio: float | None = None,
         holding_cycle_ratio_x: float | None = None,
         holding_cycle_ratio_z: float | None = None,
+        specified_holding_cycle: int | None = None,
         specified_holding_cycle_x: int | None = None,
         specified_holding_cycle_z: int | None = None,
         metadata: Dict[str, Any] = {},
@@ -43,6 +44,7 @@ class SinterSampler:
             options.stabilizer_group_holding_cycle_ratio = holding_cycle_ratio
             options.stabilizer_group_holding_cycle_ratio_x = holding_cycle_ratio_x
             options.stabilizer_group_holding_cycle_ratio_z = holding_cycle_ratio_z
+            options.stabilizer_group_specified_holding_cycle = specified_holding_cycle
             options.stabilizer_group_specified_holding_cycle_x = specified_holding_cycle_x
             options.stabilizer_group_specified_holding_cycle_z = specified_holding_cycle_z
 
