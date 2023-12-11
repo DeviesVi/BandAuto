@@ -98,7 +98,9 @@ class BuilderOptions:
 
     stabilizer_group_holding_cycle_option = HoldingCycleOption.GLOBALAVG
     stabilizer_group_holding_cycle_ratio = 0.25
-    stabilizer_group_holding_cycle_offset = 0.001
+    stabilizer_group_holding_cycle_offset = 0.000
+    stabilizer_group_specified_holding_cycle_x = 1
+    stabilizer_group_specified_holding_cycle_z = 1
     u1gate = U1Gate.H
     u2gate = U2Gate.CZ
 

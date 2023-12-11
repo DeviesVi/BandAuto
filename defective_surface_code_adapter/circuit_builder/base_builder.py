@@ -234,8 +234,12 @@ class BaseBuilder(ABC):
 
                 offset = self._builder_options.stabilizer_group_holding_cycle_offset
 
-                max_holding_cycle_x = self._builder_options.stabilizer_group_holding_cycle_function(x_weight, ratio_x, offset)
-                max_holding_cycle_z = self._builder_options.stabilizer_group_holding_cycle_function(z_weight, ratio_z, offset)
+                if self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.SPEC:
+                    max_holding_cycle_x = self._builder_options.stabilizer_group_specified_holding_cycle_x
+                    max_holding_cycle_z = self._builder_options.stabilizer_group_specified_holding_cycle_z
+                else:
+                    max_holding_cycle_x = self._builder_options.stabilizer_group_holding_cycle_function(x_weight, ratio_x, offset)
+                    max_holding_cycle_z = self._builder_options.stabilizer_group_holding_cycle_function(z_weight, ratio_z, offset)
                 
                 stabilizer_group.init(max_holding_cycle_x, max_holding_cycle_z, first_cycle_super_stabilizer_type)
             else:

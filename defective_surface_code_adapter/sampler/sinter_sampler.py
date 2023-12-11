@@ -28,10 +28,12 @@ class SinterSampler:
         cycles: List[int],
         initial_states: List[str],
         physical_errors_list: List[PhysicalErrors],
-        holding_cycle_ratio: float,
         holding_cycle_option: HoldingCycleOption = HoldingCycleOption.GLOBALAVG,
+        holding_cycle_ratio: float | None = None,
         holding_cycle_ratio_x: float | None = None,
         holding_cycle_ratio_z: float | None = None,
+        specified_holding_cycle_x: int | None = None,
+        specified_holding_cycle_z: int | None = None,
         metadata: Dict[str, Any] = {},
     ) -> Generator[sinter.Task, None, None]:
         for physical_errors in physical_errors_list:
@@ -41,6 +43,15 @@ class SinterSampler:
             options.stabilizer_group_holding_cycle_ratio = holding_cycle_ratio
             options.stabilizer_group_holding_cycle_ratio_x = holding_cycle_ratio_x
             options.stabilizer_group_holding_cycle_ratio_z = holding_cycle_ratio_z
+            options.stabilizer_group_specified_holding_cycle_x = specified_holding_cycle_x
+            options.stabilizer_group_specified_holding_cycle_z = specified_holding_cycle_z
+
+            if holding_cycle_option == HoldingCycleOption.SPEC:
+                assert specified_holding_cycle_x is not None
+                assert specified_holding_cycle_z is not None
+            else:
+                assert holding_cycle_ratio is not None or holding_cycle_ratio_x is not None and holding_cycle_ratio_z is not None
+
             builder = StimBuilder(device, options)
             for initial_state in initial_states:
                 for cycle in cycles:
