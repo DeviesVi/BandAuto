@@ -44,13 +44,13 @@ class BaseBuilder(ABC):
 
     def _prepare_stabilizer_groups(self):
         """Prepare stabilizer groups."""
-        self.visited_stabilizers = set()
+        self._visited_stabilizers = set()
         self._stabilizer_groups: List[StabilizerGroup] = []
         for stabilizer in self._stabilizers:
-            if stabilizer not in self.visited_stabilizers:
+            if stabilizer not in self._visited_stabilizers:
                 stabilizer_group = self._prepare_stabilizer_group(stabilizer)
                 self._stabilizer_groups.append(stabilizer_group)
-                self.visited_stabilizers.update(stabilizer_group.stabilizers)
+                self._visited_stabilizers.update(stabilizer_group.stabilizers)
 
     def _prepare_stabilizer_group(self, stabilizer: Stabilizer) -> StabilizerGroup:
         """Prepare a stabilizer group."""
@@ -59,9 +59,9 @@ class BaseBuilder(ABC):
         while stack:
             stabilizer_ = stack.pop()
             stabilizer_group.append(stabilizer_)
-            self.visited_stabilizers.add(stabilizer_)
+            self._visited_stabilizers.add(stabilizer_)
             for stabilizer__ in self._get_conflict_stabilizers(stabilizer_):
-                if stabilizer__ not in self.visited_stabilizers:
+                if stabilizer__ not in self._visited_stabilizers and stabilizer__ not in stack:
                     stack.append(stabilizer__)
         return StabilizerGroup(stabilizer_group)
     
