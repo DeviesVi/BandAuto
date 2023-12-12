@@ -53,8 +53,19 @@ def gen_tasks(device: Device):
 def main():
     for file in os.listdir(source_dir):
         device = Device.load(f'{source_dir}{file}')
-        samples = sampler.sample(gen_tasks(device))
-        pickle.dump(samples, open(f'{destination_dir}samples_{device.strong_id}.pkl', 'wb'))
+        samples_path = f'{destination_dir}samples_{device.strong_id}.pkl'
+        if os.path.exists(samples_path):
+            print(f'Skipping device {device.strong_id} as samples already exist')
+            continue
+        try:
+            samples = sampler.sample(gen_tasks(device))
+        except:
+            print(f'Failed to generate samples for device {device.strong_id}')
+            # Log
+            with open('failed_devices.txt', 'a') as f:
+                f.write(f'{device.strong_id}\n')
+            continue
+        pickle.dump(samples, open(samples_path, 'wb'))
 
 
 # NOTE: This is actually necessary! If the code inside 'main()' was at the
