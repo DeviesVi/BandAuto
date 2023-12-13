@@ -3,49 +3,35 @@ import os
 from defective_surface_code_adapter import Device, Analyzer
 import pickle
 import sinter
-from typing import List
+from typing import List, Callable, Any, Dict, Tuple
 import numpy as np
 
 device_path = "device_pool/devices/"
 
-min_ler_s_list = []
-min_ler_m_list = []
-min_ler_a_list = []
+min_ler = {
+    "SPEC": {"0": [], "+": []},
+    "AVG": {"0": [], "+": []},
+    "MAX": {"0": [], "+": []},
+}
 
-for file in os.listdir(device_path):
-    device = Device.load(f"{device_path}{file}")
-    samples_path = f"device_pool/samples/samples_{device.strong_id}.pkl"
-    samples: List[sinter.TaskStats] = pickle.load(open(samples_path, "rb"))
+filter_funcs: Dict[Tuple[str, str], Callable[['sinter.TaskStats'], Any]] = {
+    ("SPEC", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "SPEC",
+    ("SPEC", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "SPEC",
+    ("AVG", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "AVG",
+    ("AVG", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "AVG",
+    ("MAX", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "MAX",
+    ("MAX", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "MAX",
+}
 
-    # Classify samples according to holding cycle option
-    max_samples: List[sinter.TaskStats] = []
-    avg_samples: List[sinter.TaskStats] = []
-    spec_samples: List[sinter.TaskStats] = []
+def calculate_ler(sample: sinter.TaskStats):
+    return sample.errors/(sample.shots - sample.discards)
+
+def get_min_ler(samples: List[sinter.TaskStats], filter_func: Callable[['sinter.TaskStats'], Any] = lambda _: True):
+    ler = []
     for sample in samples:
-        if sample.json_metadata["holding_cycle_option"] == "MAX":
-            max_samples.append(sample)
-        elif sample.json_metadata["holding_cycle_option"] == "AVG":
-            avg_samples.append(sample)
-        elif sample.json_metadata["holding_cycle_option"] == "SPEC":
-            spec_samples.append(sample)
-
-    # Calculate min logical error rate for each holding cycle option
-    ler_m = [
-        sample.errors / (sample.shots - sample.discards) for sample in max_samples
-    ]
-    ler_a = [
-        sample.errors / (sample.shots - sample.discards) for sample in avg_samples
-    ]
-    ler_s = [
-        sample.errors / (sample.shots - sample.discards) for sample in spec_samples
-    ]
-    min_ler_m = min(ler_m)
-    min_ler_a = min(ler_a)
-    min_ler_s = min(ler_s)
-
-    min_ler_s_list.append(min_ler_s)
-    min_ler_m_list.append(min_ler_m)
-    min_ler_a_list.append(min_ler_a)
+        if filter_func(sample):
+            ler.append(calculate_ler(sample))
+    return min(ler)
 
 def calculate_cdf(data):
     data_sorted = np.sort(data)
@@ -56,37 +42,53 @@ def calculate_cdf(data):
     data_sorted = np.insert(data_sorted, 0, data_sorted[0])
     return data_sorted, cdf
 
-min_ler_diff_sm = [min_ler_s - min_ler_m for min_ler_s, min_ler_m in zip(min_ler_s_list, min_ler_m_list)]
-min_ler_diff_sa = [min_ler_s - min_ler_a for min_ler_s, min_ler_a in zip(min_ler_s_list, min_ler_a_list)]
-min_ler_relative_diff_sm = [min_ler_diff / min_ler_m for min_ler_diff, min_ler_m in zip(min_ler_diff_sm, min_ler_m_list)]
-min_ler_relative_diff_sa = [min_ler_diff / min_ler_a for min_ler_diff, min_ler_a in zip(min_ler_diff_sa, min_ler_a_list)]
+for file in os.listdir(device_path):
+    device = Device.load(f"{device_path}{file}")
+    samples_path = f"device_pool/samples/samples_{device.strong_id}.pkl"
+    samples: List[sinter.TaskStats] = pickle.load(open(samples_path, "rb"))
 
-min_ler_diff_sm_sorted, cdf_sm = calculate_cdf(min_ler_diff_sm)
-min_ler_diff_sa_sorted, cdf_sa = calculate_cdf(min_ler_diff_sa)
-min_ler_relative_diff_sm_sorted, cdf_sm = calculate_cdf(min_ler_relative_diff_sm)
-min_ler_relative_diff_sa_sorted, cdf_sa = calculate_cdf(min_ler_relative_diff_sa)
+    for (holding_cycle_option, initial_state), filter_func in filter_funcs.items():
+        min_ler[holding_cycle_option][initial_state].append(get_min_ler(samples, filter_func))
 
-plt.subplot(121)
-plt.step(min_ler_diff_sm_sorted, cdf_sm, label="SPEC-MAX", linewidth=2, color="blue")
-plt.step(min_ler_diff_sa_sorted, cdf_sa, label="SPEC-AVG", linewidth=2, color="orange")
-# Plot vertical line at CDF = 0.5
-plt.axvline(x=min_ler_diff_sm_sorted[int(len(min_ler_diff_sm_sorted)/2)], color="blue", linestyle="dashed")
-plt.axvline(x=min_ler_diff_sa_sorted[int(len(min_ler_diff_sa_sorted)/2)], color="orange", linestyle="dashed")
-plt.legend()
-plt.xlabel("Min LER difference")
-plt.ylabel("CDF")
-plt.ylim(0, 1)
+min_ler_relative_diff = {
+    ("SPEC", "AVG"): {
+        "0": [(a - b) / b for a, b in zip(min_ler["SPEC"]["0"], min_ler["AVG"]["0"])],
+        "+": [(a - b) / b for a, b in zip(min_ler["SPEC"]["+"], min_ler["AVG"]["+"])],
+    },
+    ("SPEC", "MAX"): {
+        "0": [(a - b) / b for a, b in zip(min_ler["SPEC"]["0"], min_ler["MAX"]["0"])],
+        "+": [(a - b) / b for a, b in zip(min_ler["SPEC"]["+"], min_ler["MAX"]["+"])],
+    },
+}
 
-plt.subplot(122)
-plt.step(min_ler_relative_diff_sm_sorted, cdf_sm, label="(SPEC-MAX)/MAX", linewidth=2, color="blue")
-plt.step(min_ler_relative_diff_sa_sorted, cdf_sa, label="(SPEC-AVG)/AVG", linewidth=2, color="orange")
-# Plot vertical line at CDF = 0.5
-plt.axvline(x=min_ler_relative_diff_sm_sorted[int(len(min_ler_relative_diff_sm_sorted)/2)], color="blue", linestyle="dashed", label=f"Median={min_ler_relative_diff_sm_sorted[int(len(min_ler_relative_diff_sm_sorted)/2)]:.2f}")
-plt.axvline(x=min_ler_relative_diff_sa_sorted[int(len(min_ler_relative_diff_sa_sorted)/2)], color="orange", linestyle="dashed", label=f"Median={min_ler_relative_diff_sa_sorted[int(len(min_ler_relative_diff_sa_sorted)/2)]:.2f}")
+min_ler_relative_diff_cdf = {
+    ("SPEC", "AVG"): {
+        "0": calculate_cdf(min_ler_relative_diff[("SPEC", "AVG")]["0"]),
+        "+": calculate_cdf(min_ler_relative_diff[("SPEC", "AVG")]["+"]),
+    },
+    ("SPEC", "MAX"): {
+        "0": calculate_cdf(min_ler_relative_diff[("SPEC", "MAX")]["0"]),
+        "+": calculate_cdf(min_ler_relative_diff[("SPEC", "MAX")]["+"]),
+    },
+}
 
-plt.legend()
-plt.xlabel("Min LER relative difference")
-plt.ylabel("CDF")
-plt.ylim(0, 1)
+# Plot CDF using plt.step
+fig, ax = plt.subplots()
+ax.step(*min_ler_relative_diff_cdf[("SPEC", "AVG")]["0"], label="(SPEC-AVG)/AVG, 0", color="blue", linewidth=2)
+ax.step(*min_ler_relative_diff_cdf[("SPEC", "AVG")]["+"], label="(SPEC-AVG)/AVG, +", color="orange", linewidth=2)
+ax.step(*min_ler_relative_diff_cdf[("SPEC", "MAX")]["0"], label="(SPEC-MAX)/MAX, 0", color="green", linewidth=2)
+ax.step(*min_ler_relative_diff_cdf[("SPEC", "MAX")]["+"], label="(SPEC-MAX)/MAX, +", color="red", linewidth=2)
+# Plot vertical line at median with x value on label
+ax.axvline(x=np.median(min_ler_relative_diff[("SPEC", "AVG")]["0"]), color="blue", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPEC', 'AVG')]['0']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPEC", "AVG")]["+"]), color="orange", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPEC', 'AVG')]['+']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPEC", "MAX")]["0"]), color="green", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPEC', 'MAX')]['0']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPEC", "MAX")]["+"]), color="red", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPEC', 'MAX')]['+']):.2f}")
+
+ax.legend()
+ax.set_title("CDF of Relative Difference of Min LER")
+ax.set_ylabel("CDF")
+ax.set_xlabel("Relative Difference of Min LER")
+ax.grid()
+ax.set_ylim(0, 1)
 
 plt.show()
