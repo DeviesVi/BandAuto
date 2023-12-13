@@ -50,24 +50,25 @@ for file in os.listdir(device_path):
 def calculate_cdf(data):
     data_sorted = np.sort(data)
     cdf = np.arange(1, len(data_sorted) + 1) / len(data_sorted)
+    # Add 0 to beginning of CDF
+    cdf = np.insert(cdf, 0, 0)
+    # Add first data point to beginning of data
+    data_sorted = np.insert(data_sorted, 0, data_sorted[0])
     return data_sorted, cdf
 
 min_ler_diff_sm = [min_ler_s - min_ler_m for min_ler_s, min_ler_m in zip(min_ler_s_list, min_ler_m_list)]
 min_ler_diff_sa = [min_ler_s - min_ler_a for min_ler_s, min_ler_a in zip(min_ler_s_list, min_ler_a_list)]
-
 min_ler_relative_diff_sm = [min_ler_diff / min_ler_m for min_ler_diff, min_ler_m in zip(min_ler_diff_sm, min_ler_m_list)]
 min_ler_relative_diff_sa = [min_ler_diff / min_ler_a for min_ler_diff, min_ler_a in zip(min_ler_diff_sa, min_ler_a_list)]
 
 min_ler_diff_sm_sorted, cdf_sm = calculate_cdf(min_ler_diff_sm)
 min_ler_diff_sa_sorted, cdf_sa = calculate_cdf(min_ler_diff_sa)
-
 min_ler_relative_diff_sm_sorted, cdf_sm = calculate_cdf(min_ler_relative_diff_sm)
 min_ler_relative_diff_sa_sorted, cdf_sa = calculate_cdf(min_ler_relative_diff_sa)
 
-
 plt.subplot(121)
-plt.plot(min_ler_diff_sm_sorted, cdf_sm, label="SPEC-MAX", linewidth=2, color="blue")
-plt.plot(min_ler_diff_sa_sorted, cdf_sa, label="SPEC-AVG", linewidth=2, color="orange")
+plt.step(min_ler_diff_sm_sorted, cdf_sm, label="SPEC-MAX", linewidth=2, color="blue")
+plt.step(min_ler_diff_sa_sorted, cdf_sa, label="SPEC-AVG", linewidth=2, color="orange")
 # Plot vertical line at CDF = 0.5
 plt.axvline(x=min_ler_diff_sm_sorted[int(len(min_ler_diff_sm_sorted)/2)], color="blue", linestyle="dashed")
 plt.axvline(x=min_ler_diff_sa_sorted[int(len(min_ler_diff_sa_sorted)/2)], color="orange", linestyle="dashed")
@@ -77,8 +78,8 @@ plt.ylabel("CDF")
 plt.ylim(0, 1)
 
 plt.subplot(122)
-plt.plot(min_ler_relative_diff_sm_sorted, cdf_sm, label="(SPEC-MAX)/MAX", linewidth=2, color="blue")
-plt.plot(min_ler_relative_diff_sa_sorted, cdf_sa, label="(SPEC-AVG)/AVG", linewidth=2, color="orange")
+plt.step(min_ler_relative_diff_sm_sorted, cdf_sm, label="(SPEC-MAX)/MAX", linewidth=2, color="blue")
+plt.step(min_ler_relative_diff_sa_sorted, cdf_sa, label="(SPEC-AVG)/AVG", linewidth=2, color="orange")
 # Plot vertical line at CDF = 0.5
 plt.axvline(x=min_ler_relative_diff_sm_sorted[int(len(min_ler_relative_diff_sm_sorted)/2)], color="blue", linestyle="dashed", label=f"Median={min_ler_relative_diff_sm_sorted[int(len(min_ler_relative_diff_sm_sorted)/2)]:.2f}")
 plt.axvline(x=min_ler_relative_diff_sa_sorted[int(len(min_ler_relative_diff_sa_sorted)/2)], color="orange", linestyle="dashed", label=f"Median={min_ler_relative_diff_sa_sorted[int(len(min_ler_relative_diff_sa_sorted)/2)]:.2f}")
