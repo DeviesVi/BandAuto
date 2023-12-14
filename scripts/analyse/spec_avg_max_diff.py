@@ -5,8 +5,7 @@ import pickle
 import sinter
 from typing import List, Callable, Any, Dict, Tuple
 import numpy as np
-
-device_path = "device_pool/devices/"
+from data_dir import device_dir, sample_dir
 
 min_ler = {
     "SPEC": {"0": [], "+": []},
@@ -42,9 +41,9 @@ def calculate_cdf(data):
     data_sorted = np.insert(data_sorted, 0, data_sorted[0])
     return data_sorted, cdf
 
-for file in os.listdir(device_path):
-    device = Device.load(f"{device_path}{file}")
-    samples_path = f"device_pool/samples/samples_{device.strong_id}.pkl"
+for file in os.listdir(device_dir):
+    device = Device.load(f"{device_dir}{file}")
+    samples_path = f"{sample_dir}/samples_{device.strong_id}.pkl"
     samples: List[sinter.TaskStats] = pickle.load(open(samples_path, "rb"))
 
     for (holding_cycle_option, initial_state), filter_func in filter_funcs.items():

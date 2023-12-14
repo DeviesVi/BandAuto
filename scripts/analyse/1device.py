@@ -1,20 +1,20 @@
 import matplotlib.pyplot as plt
 import os
-from defective_surface_code_adapter import Device, Analyzer
+from defective_surface_code_adapter import Device, Analyzer, Adapter, plot_graph
 import pickle
 import sinter
 from typing import List
 import numpy as np
-
-device_path = "device_pool\devices\device_eb47b63d049950f90bac30f696de2db5136b46147803ae34d77c0a81da773048.pkl"
+from data_dir import device_dir, sample_dir
 
 min_ler_s_list = []
 min_ler_m_list = []
 min_ler_a_list = []
 
+device = "0927d9540e635e9813aa291684e4ec9f9726db5776d5100d886620501ca7baac"
 
-device = Device.load(device_path)
-samples_path = f"device_pool/samples/samples_{device.strong_id}.pkl"
+device = Device.load(f"{device_dir}device_{device}.pkl")
+samples_path = f"{sample_dir}/samples_{device.strong_id}.pkl"
 samples: List[sinter.TaskStats] = pickle.load(open(samples_path, "rb"))
 
 # Classify samples according to holding cycle option and initial state
@@ -41,7 +41,7 @@ for sample in samples:
         elif sample.json_metadata["initial_state"] == "+":
             spec_samples_plus.append(sample)
 
-ax = plt.subplot(121)
+ax = plt.subplot(221)
 
 sinter.plot_error_rate(
     ax=ax,
@@ -57,7 +57,7 @@ ax.set_xlabel("N Shell")
 ax.legend()
 
 
-ax = plt.subplot(122)
+ax = plt.subplot(223)
 
 sinter.plot_error_rate(
     ax=ax,
@@ -72,7 +72,11 @@ ax.set_ylabel("Logical Error Probability (per shot)")
 ax.set_xlabel("Shell Ratio")
 ax.legend()
 
-result = Analyzer.analyze_device(device)
-print(result)
+ax = plt.subplot(122)
+adapter_result = Adapter.adapt_device(device)
+plot_graph(device.graph, adapter_result.disabled_nodes)
+
+analyzer_result = Analyzer.analyze_device(device)
+print(analyzer_result)
 
 plt.show()
