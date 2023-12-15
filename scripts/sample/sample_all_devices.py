@@ -8,15 +8,15 @@ from defective_surface_code_adapter import (
     PhysicalErrors,
 )
 
-source_dir = 'device_pool/devices/'
-destination_dir = 'device_pool/samples/'
+source_dir = 'device_pool/device_d21_qdr0.02_cdr0.02/devices/'
+destination_dir = 'device_pool/device_d21_qdr0.02_cdr0.02/samples_p0.002/'
 
 # Check destination directory exists
 if not os.path.exists(destination_dir):
     os.makedirs(destination_dir)
 
-sampler = SinterSampler(num_workers=8)
-holding_cycle_options = [HoldingCycleOption.MAX, HoldingCycleOption.AVG, HoldingCycleOption.SPEC]
+sampler = SinterSampler(num_workers=100)
+holding_cycle_options = [HoldingCycleOption.LOCALMAX, HoldingCycleOption.LOCALAVG, HoldingCycleOption.SPECIFIED]
 
 physical_errors = PhysicalErrors.SI1000_from_p(0.002)
 ratio_range = np.linspace(0.02, 0.80, 40)
@@ -27,7 +27,7 @@ def gen_tasks(device: Device):
         distace = min(device.data_width, device.data_height)
         for holding_cycle_option in holding_cycle_options:
             print(f'holding_cycle_option: {holding_cycle_option.name}')
-            if holding_cycle_option == HoldingCycleOption.SPEC:
+            if holding_cycle_option == HoldingCycleOption.SPECIFIED:
                 for specified_cycle in specified_cycle_range:
                     print(f'specified_cycle: {specified_cycle}')
                     yield from sampler.gen_sinter_tasks(
