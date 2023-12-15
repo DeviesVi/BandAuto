@@ -3,17 +3,36 @@ import dataclasses
 from math import floor
 from typing import List, Dict, Callable
 from functools import cached_property
-from enum import Enum
+from enum import Enum, auto
 
 class HoldingCycleOption(Enum):
     """Holding cycle options."""
-    MIN = 'min'
-    MAX = 'max'
-    AVG = 'avg'
-    GLOBALMIN = 'globalmin'
-    GLOBALMAX = 'globalmax'
-    GLOBALAVG = 'globalavg'
-    SPEC = 'spec' # Specified by stabilizer_group_holding_cycle_ratio
+    class Value(Enum):
+        MIN = auto()
+        MAX = auto()
+        AVG = auto()
+        ME = auto()
+        SPECIFIED = auto() # Specified by stabilizer_group_holding_cycle_ratio
+    
+    class Scope(Enum):
+        GLOBAL = auto()
+        LOCAL = auto()
+
+    class XZ_Separate(Enum):
+        SEPARATE = auto()
+        SAME = auto()
+
+    GLOBALAVG = (Value.AVG, Scope.GLOBAL, XZ_Separate.SAME)
+    GLOBALAVG_SEPARATE = (Value.AVG, Scope.GLOBAL, XZ_Separate.SEPARATE)
+
+    LOCALAVG = (Value.AVG, Scope.LOCAL, XZ_Separate.SAME)
+    LOCALAVG_SEPARATE = (Value.AVG, Scope.LOCAL, XZ_Separate.SEPARATE)
+    
+    LOCALMAX = (Value.MAX, Scope.LOCAL, XZ_Separate.SAME)
+    LOCALMAX_SEPARATE = (Value.MAX, Scope.LOCAL, XZ_Separate.SEPARATE)
+    
+    SPECIFIED = (Value.SPECIFIED, Scope.GLOBAL, XZ_Separate.SEPARATE)
+
 
 class OPType(Enum):
     INIT = 'INIT'
@@ -98,10 +117,11 @@ class BuilderOptions:
         '-': 'X',
     } # Do not modify this option.
 
-    stabilizer_group_holding_cycle_option = HoldingCycleOption.GLOBALAVG
-    stabilizer_group_holding_cycle_ratio = 0.25
+    stabilizer_group_holding_cycle_option = HoldingCycleOption.SPECIFIED
+    stabilizer_group_holding_cycle_ratio = 0.35
     stabilizer_group_holding_cycle_offset = 0.000
     stabilizer_group_specified_holding_cycle = 1
+
     u1gate = U1Gate.H
     u2gate = U2Gate.CZ
 

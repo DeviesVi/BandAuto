@@ -48,7 +48,7 @@ class SinterSampler:
             options.stabilizer_group_specified_holding_cycle_x = specified_holding_cycle_x
             options.stabilizer_group_specified_holding_cycle_z = specified_holding_cycle_z
 
-            if holding_cycle_option == HoldingCycleOption.SPEC:
+            if holding_cycle_option == HoldingCycleOption.SPECIFIED:
                 assert specified_holding_cycle is not None or specified_holding_cycle_x is not None and specified_holding_cycle_z is not None                
             else:
                 assert holding_cycle_ratio is not None or holding_cycle_ratio_x is not None and holding_cycle_ratio_z is not None

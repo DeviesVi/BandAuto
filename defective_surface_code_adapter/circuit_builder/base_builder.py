@@ -234,7 +234,7 @@ class BaseBuilder(ABC):
 
                 offset = self._builder_options.stabilizer_group_holding_cycle_offset
 
-                if self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.SPEC:
+                if self._builder_options.stabilizer_group_holding_cycle_option == HoldingCycleOption.SPECIFIED:
                     max_holding_cycle_x = self._builder_options.stabilizer_group_specified_holding_cycle_x
                     max_holding_cycle_z = self._builder_options.stabilizer_group_specified_holding_cycle_z
                 else:
@@ -249,27 +249,27 @@ class BaseBuilder(ABC):
     def _weight_for_stabilizer_group(self, stabilizer_group: StabilizerGroup) -> Tuple[int, int]:
         """Get weight for stabilizer group holding cycle option."""
         option = self._builder_options.stabilizer_group_holding_cycle_option
-        if option == HoldingCycleOption.MAX:
+        if option == HoldingCycleOption.LOCALMAX:
+            x_weight = stabilizer_group.max_stabilizer_weight
+            z_weight = stabilizer_group.max_stabilizer_weight
+        elif option == HoldingCycleOption.LOCALMAX_SEPARATE:
             x_weight = stabilizer_group.max_stabilizer_weight_x
             z_weight = stabilizer_group.max_stabilizer_weight_z
-        elif option == HoldingCycleOption.MIN:
-            x_weight = stabilizer_group.min_stabilizer_weight_x
-            z_weight = stabilizer_group.min_stabilizer_weight_z
-        elif option == HoldingCycleOption.AVG:
+        elif option == HoldingCycleOption.LOCALAVG:
+            x_weight = stabilizer_group.avg_stabilizer_weight
+            z_weight = stabilizer_group.avg_stabilizer_weight
+        elif option == HoldingCycleOption.LOCALAVG_SEPARATE:
             x_weight = stabilizer_group.avg_stabilizer_weight_x
             z_weight = stabilizer_group.avg_stabilizer_weight_z
-        elif option == HoldingCycleOption.GLOBALMAX:
-            x_weight = self._stabilizer_groups_info['max_x']
-            z_weight = self._stabilizer_groups_info['max_z']
-        elif option == HoldingCycleOption.GLOBALMIN:
-            x_weight = self._stabilizer_groups_info['min_x']
-            z_weight = self._stabilizer_groups_info['min_z']
         elif option == HoldingCycleOption.GLOBALAVG:
+            x_weight = self._stabilizer_groups_info['avg']
+            z_weight = self._stabilizer_groups_info['avg']
+        elif option == HoldingCycleOption.GLOBALAVG_SEPARATE:
             x_weight = self._stabilizer_groups_info['avg_x']
             z_weight = self._stabilizer_groups_info['avg_z']
-        elif option == HoldingCycleOption.SPEC:
-            x_weight = 1
-            z_weight = 1
+        else:
+            x_weight = None
+            z_weight = None
         return x_weight, z_weight
 
 
@@ -421,10 +421,10 @@ class BaseBuilder(ABC):
         global_stabilizer_weights = {
             'max_x': None,
             'max_z': None,
-            'min_x': None,
-            'min_z': None,
             'avg_x': None,
-            'avg_z': None
+            'avg_z': None,
+            'max': None,
+            'avg': None,
         }
 
         super_stabilizer_count_x = 0
@@ -441,10 +441,10 @@ class BaseBuilder(ABC):
 
         global_stabilizer_weights['max_x'] = max([stabilizer_group.max_stabilizer_weight_x for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
         global_stabilizer_weights['max_z'] = max([stabilizer_group.max_stabilizer_weight_z for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
-        global_stabilizer_weights['min_x'] = min([stabilizer_group.min_stabilizer_weight_x for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
-        global_stabilizer_weights['min_z'] = min([stabilizer_group.min_stabilizer_weight_z for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
+        global_stabilizer_weights['max'] = max([stabilizer_group.max_stabilizer_weight for stabilizer_group in self._stabilizer_groups if stabilizer_group.is_super_stabilizer_group])
         global_stabilizer_weights['avg_x'] = super_stabilizer_weight_x_sum / super_stabilizer_count_x
         global_stabilizer_weights['avg_z'] = super_stabilizer_weight_z_sum / super_stabilizer_count_z
+        global_stabilizer_weights['avg'] =  (super_stabilizer_weight_x_sum + super_stabilizer_weight_z_sum) / (super_stabilizer_count_x + super_stabilizer_count_z)
 
         return global_stabilizer_weights
 
