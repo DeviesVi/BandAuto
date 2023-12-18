@@ -13,6 +13,8 @@ min_ler_a_list = []
 
 device = "0927d9540e635e9813aa291684e4ec9f9726db5776d5100d886620501ca7baac"
 
+print(device)
+
 device = Device.load(f"{device_dir}device_{device}.pkl")
 samples_path = f"{sample_dir}/samples_{device.strong_id}.pkl"
 samples: List[sinter.TaskStats] = pickle.load(open(samples_path, "rb"))
@@ -25,17 +27,17 @@ avg_samples_plus: List[sinter.TaskStats] = []
 spec_samples_zero: List[sinter.TaskStats] = []
 spec_samples_plus: List[sinter.TaskStats] = []
 for sample in samples:
-    if sample.json_metadata["holding_cycle_option"] == "MAX":
+    if sample.json_metadata["holding_cycle_option"] == "LOCALMAX":
         if sample.json_metadata["initial_state"] == "0":
             max_samples_zero.append(sample)
         elif sample.json_metadata["initial_state"] == "+":
             max_samples_plus.append(sample)
-    elif sample.json_metadata["holding_cycle_option"] == "AVG":
+    elif sample.json_metadata["holding_cycle_option"] == "LOCALAVG":
         if sample.json_metadata["initial_state"] == "0":
             avg_samples_zero.append(sample)
         elif sample.json_metadata["initial_state"] == "+":
             avg_samples_plus.append(sample)
-    elif sample.json_metadata["holding_cycle_option"] == "SPEC":
+    elif sample.json_metadata["holding_cycle_option"] == "SPECIFIED":
         if sample.json_metadata["initial_state"] == "0":
             spec_samples_zero.append(sample)
         elif sample.json_metadata["initial_state"] == "+":

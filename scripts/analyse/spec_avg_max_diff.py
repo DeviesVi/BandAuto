@@ -8,18 +8,18 @@ import numpy as np
 from data_dir import device_dir, sample_dir
 
 min_ler = {
-    "SPEC": {"0": [], "+": []},
-    "AVG": {"0": [], "+": []},
-    "MAX": {"0": [], "+": []},
+    "SPECIFIED": {"0": [], "+": []},
+    "LOCALAVG": {"0": [], "+": []},
+    "LOCALMAX": {"0": [], "+": []},
 }
 
 filter_funcs: Dict[Tuple[str, str], Callable[['sinter.TaskStats'], Any]] = {
-    ("SPEC", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "SPEC",
-    ("SPEC", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "SPEC",
-    ("AVG", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "AVG",
-    ("AVG", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "AVG",
-    ("MAX", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "MAX",
-    ("MAX", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "MAX",
+    ("SPECIFIED", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "SPECIFIED",
+    ("SPECIFIED", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "SPECIFIED",
+    ("LOCALAVG", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "LOCALAVG",
+    ("LOCALAVG", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "LOCALAVG",
+    ("LOCALMAX", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "LOCALMAX",
+    ("LOCALMAX", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "LOCALMAX",
 }
 
 def calculate_ler(sample: sinter.TaskStats):
@@ -50,38 +50,38 @@ for file in os.listdir(device_dir):
         min_ler[holding_cycle_option][initial_state].append(get_min_ler(samples, filter_func))
 
 min_ler_relative_diff = {
-    ("SPEC", "AVG"): {
-        "0": [(a - b) / b for a, b in zip(min_ler["SPEC"]["0"], min_ler["AVG"]["0"])],
-        "+": [(a - b) / b for a, b in zip(min_ler["SPEC"]["+"], min_ler["AVG"]["+"])],
+    ("SPECIFIED", "LOCALAVG"): {
+        "0": [(a - b) / b for a, b in zip(min_ler["SPECIFIED"]["0"], min_ler["LOCALAVG"]["0"])],
+        "+": [(a - b) / b for a, b in zip(min_ler["SPECIFIED"]["+"], min_ler["LOCALAVG"]["+"])],
     },
-    ("SPEC", "MAX"): {
-        "0": [(a - b) / b for a, b in zip(min_ler["SPEC"]["0"], min_ler["MAX"]["0"])],
-        "+": [(a - b) / b for a, b in zip(min_ler["SPEC"]["+"], min_ler["MAX"]["+"])],
+    ("SPECIFIED", "LOCALMAX"): {
+        "0": [(a - b) / b for a, b in zip(min_ler["SPECIFIED"]["0"], min_ler["LOCALMAX"]["0"])],
+        "+": [(a - b) / b for a, b in zip(min_ler["SPECIFIED"]["+"], min_ler["LOCALMAX"]["+"])],
     },
 }
 
 min_ler_relative_diff_cdf = {
-    ("SPEC", "AVG"): {
-        "0": calculate_cdf(min_ler_relative_diff[("SPEC", "AVG")]["0"]),
-        "+": calculate_cdf(min_ler_relative_diff[("SPEC", "AVG")]["+"]),
+    ("SPECIFIED", "LOCALAVG"): {
+        "0": calculate_cdf(min_ler_relative_diff[("SPECIFIED", "LOCALAVG")]["0"]),
+        "+": calculate_cdf(min_ler_relative_diff[("SPECIFIED", "LOCALAVG")]["+"]),
     },
-    ("SPEC", "MAX"): {
-        "0": calculate_cdf(min_ler_relative_diff[("SPEC", "MAX")]["0"]),
-        "+": calculate_cdf(min_ler_relative_diff[("SPEC", "MAX")]["+"]),
+    ("SPECIFIED", "LOCALMAX"): {
+        "0": calculate_cdf(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["0"]),
+        "+": calculate_cdf(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["+"]),
     },
 }
 
 # Plot CDF using plt.step
 fig, ax = plt.subplots()
-ax.step(*min_ler_relative_diff_cdf[("SPEC", "AVG")]["0"], label="(SPEC-AVG)/AVG, 0", color="blue", linewidth=2)
-ax.step(*min_ler_relative_diff_cdf[("SPEC", "AVG")]["+"], label="(SPEC-AVG)/AVG, +", color="orange", linewidth=2)
-ax.step(*min_ler_relative_diff_cdf[("SPEC", "MAX")]["0"], label="(SPEC-MAX)/MAX, 0", color="green", linewidth=2)
-ax.step(*min_ler_relative_diff_cdf[("SPEC", "MAX")]["+"], label="(SPEC-MAX)/MAX, +", color="red", linewidth=2)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALAVG")]["0"], label="(SPEC-AVG)/AVG, 0", color="blue", linewidth=2)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALAVG")]["+"], label="(SPEC-AVG)/AVG, +", color="orange", linewidth=2)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALMAX")]["0"], label="(SPEC-MAX)/MAX, 0", color="green", linewidth=2)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALMAX")]["+"], label="(SPEC-MAX)/MAX, +", color="red", linewidth=2)
 # Plot vertical line at median with x value on label
-ax.axvline(x=np.median(min_ler_relative_diff[("SPEC", "AVG")]["0"]), color="blue", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPEC', 'AVG')]['0']):.2f}")
-ax.axvline(x=np.median(min_ler_relative_diff[("SPEC", "AVG")]["+"]), color="orange", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPEC', 'AVG')]['+']):.2f}")
-ax.axvline(x=np.median(min_ler_relative_diff[("SPEC", "MAX")]["0"]), color="green", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPEC', 'MAX')]['0']):.2f}")
-ax.axvline(x=np.median(min_ler_relative_diff[("SPEC", "MAX")]["+"]), color="red", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPEC', 'MAX')]['+']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALAVG")]["0"]), color="blue", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALAVG')]['0']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALAVG")]["+"]), color="orange", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALAVG')]['+']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["0"]), color="green", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALMAX')]['0']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["+"]), color="red", linestyle="--", label=f"Median: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALMAX')]['+']):.2f}")
 
 ax.legend()
 ax.set_title("CDF of Relative Difference of Min LER")
