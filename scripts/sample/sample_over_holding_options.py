@@ -24,7 +24,7 @@ specified_cycle_range = range(1, 11)
 
 def gen_tasks(device: Device):
         print(f'Generating samples for device {device.strong_id}')
-        distace = min(device.data_width, device.data_height)
+        distance = min(device.data_width, device.data_height)
         for holding_cycle_option in holding_cycle_options:
             print(f'holding_cycle_option: {holding_cycle_option.name}')
             if holding_cycle_option == HoldingCycleOption.SPECIFIED:
@@ -32,7 +32,7 @@ def gen_tasks(device: Device):
                     print(f'specified_cycle: {specified_cycle}')
                     yield from sampler.gen_sinter_tasks(
                         device=device,
-                        cycles=[distace],
+                        cycles=[distance],
                         initial_states=["0","+"],
                         physical_errors_list=[physical_errors],
                         holding_cycle_option=holding_cycle_option,
@@ -43,7 +43,7 @@ def gen_tasks(device: Device):
                     print(f'ratio: {ratio}')
                     yield from sampler.gen_sinter_tasks(
                         device=device,
-                        cycles=[distace],
+                        cycles=[distance],
                         initial_states=["0","+"],
                         physical_errors_list=[physical_errors],
                         holding_cycle_option=holding_cycle_option,
