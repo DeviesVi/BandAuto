@@ -11,11 +11,11 @@ min_ler_s_list = []
 min_ler_m_list = []
 min_ler_a_list = []
 
-device = "0927d9540e635e9813aa291684e4ec9f9726db5776d5100d886620501ca7baac"
+device = "8ffe94ea1a6218b6982e5d48d2b3994eee4a1bc2c8683ac8fbb686eb0636094c"
 
 print(device)
 
-device = Device.load(f"{device_dir}device_{device}.pkl")
+device = Device.load(f"{device_dir}/device_{device}.pkl")
 samples_path = f"{sample_dir}/samples_{device.strong_id}.pkl"
 samples: List[sinter.TaskStats] = pickle.load(open(samples_path, "rb"))
 
