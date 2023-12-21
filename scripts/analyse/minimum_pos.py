@@ -5,7 +5,9 @@ import pickle
 import sinter
 from typing import List, Callable, Any, Dict, Tuple
 import numpy as np
-from data_dir import device_dir, sample_dir
+
+device_dir = "device_pool/device_d21_qdr0.02_cdr0.02/devices"
+sample_dir = "device_pool/device_d21_qdr0.02_cdr0.02/samples_over_holding_options_p0.002"
 
 min_ler_pos = {
     "SPECIFIED": {"0": [], "+": []},
