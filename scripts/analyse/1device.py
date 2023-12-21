@@ -5,17 +5,16 @@ import pickle
 import sinter
 from typing import List
 import numpy as np
-from data_dir import device_dir, sample_dir
 
 min_ler_s_list = []
 min_ler_m_list = []
 min_ler_a_list = []
 
-device = "8ffe94ea1a6218b6982e5d48d2b3994eee4a1bc2c8683ac8fbb686eb0636094c"
+device_path = 'device_pool/device_d21_qdr0.02_cdr0.02/devices/device_f18efd2f3ded1a49e8011fd565ecb19bf277c3010172993707f78c633d2dac40.pkl'
+sample_dir = 'device_pool/device_d21_qdr0.02_cdr0.02/samples_over_holding_options_p0.002'
 
-print(device)
 
-device = Device.load(f"{device_dir}/device_{device}.pkl")
+device = Device.load(device_path)
 samples_path = f"{sample_dir}/samples_{device.strong_id}.pkl"
 samples: List[sinter.TaskStats] = pickle.load(open(samples_path, "rb"))
 

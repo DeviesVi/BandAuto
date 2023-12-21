@@ -5,25 +5,19 @@ import pickle
 import sinter
 from typing import List, Callable, Any, Dict, Tuple
 import numpy as np
-from data_dir import device_dir, sample_dir
+from utils import calculate_ler
+
+device_dir = "device_pool/device_d21_qdr0.005_cdr0.005/devices"
+sample_dir = "device_pool/device_d21_qdr0.005_cdr0.005/samples_over_specified_cycle"
 
 min_ler_pos = {
     "SPECIFIED": {"0": [], "+": []},
-    "LOCALAVG": {"0": [], "+": []},
-    "LOCALMAX": {"0": [], "+": []},
 }
 
 filter_funcs: Dict[Tuple[str, str], Callable[['sinter.TaskStats'], Any]] = {
     ("SPECIFIED", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "SPECIFIED",
     ("SPECIFIED", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "SPECIFIED",
-    ("LOCALAVG", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "LOCALAVG",
-    ("LOCALAVG", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "LOCALAVG",
-    ("LOCALMAX", "0"): lambda stat: stat.json_metadata["initial_state"] == "0" and stat.json_metadata["holding_cycle_option"] == "LOCALMAX",
-    ("LOCALMAX", "+"): lambda stat: stat.json_metadata["initial_state"] == "+" and stat.json_metadata["holding_cycle_option"] == "LOCALMAX",
 }
-
-def calculate_ler(sample: sinter.TaskStats):
-    return sample.errors/(sample.shots - sample.discards)
 
 def get_min_ler_pos(device:Device, samples: List[sinter.TaskStats], filter_func: Callable[['sinter.TaskStats'], Any] = lambda _: True, devide_weight = True):
     # Record the position of the minimum LER, according to specified_holding_cycle or holding_cycle_ratio
@@ -47,9 +41,8 @@ def get_min_ler_pos(device:Device, samples: List[sinter.TaskStats], filter_func:
                     else:
                         min_ler_pos = sample.json_metadata["specified_holding_cycle"] if sample.json_metadata["holding_cycle_option"] == "SPECIFIED" else sample.json_metadata["holding_cycle_ratio"]
                     min_ler = ler
-    if min_ler_pos < 0.2:
+    if min_ler_pos > 0.7:
         print(device.strong_id)
-            
     return min_ler_pos
 
 def calculate_cdf(data):
@@ -76,17 +69,9 @@ min_ler_pos_cdf = {
         "0": calculate_cdf(min_ler_pos["SPECIFIED"]["0"]),
         "+": calculate_cdf(min_ler_pos["SPECIFIED"]["+"]),
     },
-    "LOCALAVG": {
-        "0": calculate_cdf(min_ler_pos["LOCALAVG"]["0"]),
-        "+": calculate_cdf(min_ler_pos["LOCALAVG"]["+"]),
-    },
-    "LOCALMAX": {
-        "0": calculate_cdf(min_ler_pos["LOCALMAX"]["0"]),
-        "+": calculate_cdf(min_ler_pos["LOCALMAX"]["+"]),
-    },
 }
 
-ax = plt.subplot(121)
+ax = plt.subplot(111)
 # Plot SPECIFIED
 ax.step(min_ler_pos_cdf["SPECIFIED"]["0"][0], min_ler_pos_cdf["SPECIFIED"]["0"][1], label="SPECIFIED, 0", linewidth=2, color="blue")
 ax.step(min_ler_pos_cdf["SPECIFIED"]["+"][0], min_ler_pos_cdf["SPECIFIED"]["+"][1], label="SPECIFIED, +", linewidth=2, color="orange")
@@ -99,26 +84,6 @@ ax.legend()
 ax.grid()
 ax.set_title("CDF of Minimum LER Position")
 ax.set_xlabel("N Shell/Average Weight")
-ax.set_ylabel("CDF")
-ax.set_ylim(0, 1)
-
-# Plot LOCALAVG and LOCALMAX
-ax = plt.subplot(122)
-# Plot LOCALAVG
-ax.step(min_ler_pos_cdf["LOCALAVG"]["0"][0], min_ler_pos_cdf["LOCALAVG"]["0"][1], label="LOCALAVG, 0", linewidth=2, color="blue")
-ax.step(min_ler_pos_cdf["LOCALAVG"]["+"][0], min_ler_pos_cdf["LOCALAVG"]["+"][1], label="LOCALAVG, +", linewidth=2, color="orange")
-# Plot LOCALMAX
-ax.step(min_ler_pos_cdf["LOCALMAX"]["0"][0], min_ler_pos_cdf["LOCALMAX"]["0"][1], label="LOCALMAX, 0", linewidth=2, color="green")
-ax.step(min_ler_pos_cdf["LOCALMAX"]["+"][0], min_ler_pos_cdf["LOCALMAX"]["+"][1], label="LOCALMAX, +", linewidth=2, color="red")
-# Plot vertical line at median
-ax.axvline(np.median(min_ler_pos["LOCALAVG"]["0"]), color="blue", linestyle="--", label=f"Median: {np.median(min_ler_pos['LOCALAVG']['0']):.2f}")
-ax.axvline(np.median(min_ler_pos["LOCALAVG"]["+"]), color="orange", linestyle="--", label=f"Median: {np.median(min_ler_pos['LOCALAVG']['+']):.2f}")
-ax.axvline(np.median(min_ler_pos["LOCALMAX"]["0"]), color="green", linestyle="dashdot", label=f"Median: {np.median(min_ler_pos['LOCALMAX']['0']):.2f}")
-ax.axvline(np.median(min_ler_pos["LOCALMAX"]["+"]), color="red", linestyle="dashdot", label=f"Median: {np.median(min_ler_pos['LOCALMAX']['+']):.2f}")
-ax.legend()
-ax.grid()
-ax.set_title("CDF of Minimum LER Position")
-ax.set_xlabel("Holding Cycle Ratio")
 ax.set_ylabel("CDF")
 ax.set_ylim(0, 1)
 
