@@ -10,6 +10,18 @@ sample_paths = [
     'device_pool/device_d27_qdr0.02_cdr0.02/samples_over_specified_cycle',
 ]
 
+perfect_device_paths = [
+    'device_pool/device_d15_qdr0_cdr0/devices/device_04c4a53224db00ca8c1b5ff40db07fe792268764a5f84d737d09923fb9eb8c2e.pkl',
+    'device_pool/device_d21_qdr0_cdr0/devices/device_0466bb5cca000f36704b3eee72ea19060f40c8008a0dda96661f3f30c54b39ba.pkl',
+    'device_pool/device_d27_qdr0_cdr0/devices/device_3eb43fcb57726a6e82badc1a68104382c1e03971ab65a13f1fd3849cca422ff0.pkl',
+]
+
+perfect_sample_paths = [
+    'device_pool/device_d15_qdr0_cdr0/samples/samples_04c4a53224db00ca8c1b5ff40db07fe792268764a5f84d737d09923fb9eb8c2e.pkl',
+    'device_pool/device_d21_qdr0_cdr0/samples/samples_0466bb5cca000f36704b3eee72ea19060f40c8008a0dda96661f3f30c54b39ba.pkl',
+    'device_pool/device_d27_qdr0_cdr0/samples/samples_3eb43fcb57726a6e82badc1a68104382c1e03971ab65a13f1fd3849cca422ff0.pkl',
+]
+
 from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
 import os
@@ -38,6 +50,22 @@ for i, device_path in enumerate(device_paths):
                 min_ler = min(min_ler, calculate_ler(sample))
         results[device.data_width].append(min_ler)
 
+perfect_results = {
+    15: [],
+    21: [],
+    27: [],
+}
+
+for i, device_path in enumerate(perfect_device_paths):
+    device = Device.load(device_path)
+    samples: List[sinter.TaskStats] = pickle.load(open(perfect_sample_paths[i], 'rb'))
+    # Calculate min LER for each device
+    min_ler = 1
+    for sample in samples:
+        if sample.json_metadata['holding_cycle_option'] == 'SPECIFIED':
+            min_ler = min(min_ler, calculate_ler(sample))
+    perfect_results[device.data_width].append(min_ler)
+
 
 # Draw boxplot
 plt.boxplot(
@@ -49,8 +77,17 @@ plt.boxplot(
     flierprops=dict(marker='.'),
 )
 
+# Draw perfect reference
+plt.plot(
+    [1, 2, 3],
+    [perfect_results[15][0], perfect_results[21][0], perfect_results[27][0]],
+    label = 'Perfect',
+)
+
+
 # set y to log scale
 plt.yscale('log')
+plt.legend()
 
 plt.title('Minimum LER vs Distance')
 plt.xlabel('Distance')

@@ -12,6 +12,14 @@ sample_paths = [
     'device_pool/device_d21_qdr0.005_cdr0.005/samples_over_specified_cycle',
 ]
 
+perfect_device_paths = [
+    'device_pool/device_d21_qdr0_cdr0/devices/device_0466bb5cca000f36704b3eee72ea19060f40c8008a0dda96661f3f30c54b39ba.pkl',
+]
+
+perfect_sample_paths = [
+    'device_pool/device_d21_qdr0_cdr0/samples/samples_0466bb5cca000f36704b3eee72ea19060f40c8008a0dda96661f3f30c54b39ba.pkl',
+]
+
 from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
 import os
@@ -28,6 +36,7 @@ results = {
     0.015: [],
     0.01: [],
     0.005: [],
+    0: [],
 }
 
 for i, device_path in enumerate(device_paths):
@@ -41,6 +50,15 @@ for i, device_path in enumerate(device_paths):
                 min_ler = min(min_ler, calculate_ler(sample))
         results[device.qubit_defect_rate].append(min_ler)
 
+for i, device_path in enumerate(perfect_device_paths):
+    device = Device.load(device_path)
+    samples: List[sinter.TaskStats] = pickle.load(open(perfect_sample_paths[i], 'rb'))
+    # Calculate min LER for each device
+    min_ler = 1
+    for sample in samples:
+        if sample.json_metadata['holding_cycle_option'] == 'SPECIFIED':
+            min_ler = min(min_ler, calculate_ler(sample))
+    results[0].append(min_ler)
 
 # Draw boxplot
 plt.boxplot(
@@ -52,8 +70,12 @@ plt.boxplot(
     flierprops=dict(marker='.'),
 )
 
+# Draw perfect reference as horizontal line
+plt.plot([0, 5], [results[0][0], results[0][0]], label='Perfect')
+
 # set y to log scale
 plt.yscale('log')
+plt.legend()
 
 plt.title('Minimum LER vs Defect Rate')
 plt.xlabel('Defect Rate')
