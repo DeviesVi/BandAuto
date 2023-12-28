@@ -9,18 +9,19 @@ from defective_surface_code_adapter import (
 )
 
 d = 27
+p = 0.003
 
 source_dir = f'device_pool/device_d{d}_qdr0_cdr0/devices'
-destination_dir = f'device_pool/device_d{d}_qdr0_cdr0/samples'
+destination_dir = f'device_pool/device_d{d}_qdr0_cdr0/samples_p{p}'
 
 # Check destination directory exists
 if not os.path.exists(destination_dir):
     os.makedirs(destination_dir)
 
-sampler = SinterSampler(num_workers=100)
+sampler = SinterSampler(num_workers=8)
 holding_cycle_option = HoldingCycleOption.SPECIFIED
 
-physical_errors = PhysicalErrors.SI1000_from_p(0.002)
+physical_errors = PhysicalErrors.SI1000_from_p(p)
 specified_cycle = 1
 
 def gen_tasks(device: Device):
