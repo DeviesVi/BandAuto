@@ -72,38 +72,11 @@ for i, device_path in enumerate(perfect_device_paths):
                 min_ler = min(min_ler, calculate_ler(sample))
         perfect_results[device.data_width, p].append(min_ler)
 
-# Draw boxplot
-offset = {
-    0.005: 0.09,
-    0.01: 0.03,
-    0.015: -0.03,
-    0.02: -0.09,
-}
-
-color_box = {
-    0.02: 'lightblue',
-    0.015: 'lightgreen',
-    0.01: 'orange',
-    0.005: 'pink',
-}
-
-for dr in defect_rates:
-    plt.boxplot(
-        [results[(d, dr)] for d in distance],
-        positions=[i + 1 + offset[dr] for i, d in enumerate(distance)],
-        widths=0.04,
-        labels=[15, 21, 27],
-        patch_artist=True,
-        boxprops=dict(facecolor=color_box[dr]),
-        medianprops=dict(color='black'),
-        flierprops=dict(marker='.', markerfacecolor=color_box[dr]),
-    )
-
 # Draw perfect reference
 color_line = {
-    0.002: 'red',
-    0.003: 'blue',
-    0.004: 'green',
+    0.002: '#2ca02c',
+    0.003: '#1f77b4',
+    0.004: '#d62728',
 }
 
 markers = {
@@ -119,7 +92,35 @@ for i, p in enumerate(perfect_SI1000_p):
         label = f'Perfect p={p}',
         color = color_line[p],
         marker = markers[p],
+        linestyle='--',
         markersize = 6,
+    )
+
+# Draw boxplot
+offset = {
+    0.005: -0.06,
+    0.01: -0.12,
+    0.015: -0.18,
+    0.02: -0.24,
+}
+
+color_box = {
+    0.02: '#ff9896',
+    0.015: '#ffbb78',
+    0.01: '#aec7e8',
+    0.005: '#98df8a',
+}
+
+for dr in defect_rates:
+    plt.boxplot(
+        [results[(d, dr)] for d in distance],
+        positions=[i + 1 + offset[dr] for i, d in enumerate(distance)],
+        widths=0.04,
+        labels=[15, 21, 27],
+        patch_artist=True,
+        boxprops=dict(facecolor=color_box[dr]),
+        medianprops=dict(color='black'),
+        flierprops=dict(marker='.', markerfacecolor=color_box[dr]),
     )
 
 plt.xticks(np.arange(1, 4), [15, 21, 27])
@@ -134,6 +135,7 @@ legend_handles = [
 plt.legend(handles=legend_handles)
 
 plt.title('LER vs Distance (Defective Device p=0.002)')
+plt.grid()
 plt.xlabel('Distance')
 plt.ylabel('LER')
 plt.show()
