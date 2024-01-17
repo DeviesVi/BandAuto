@@ -160,9 +160,9 @@ ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["0"]), c
 ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["+"]), color="red", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALMAX')]['+']):.2f}")
 
 ax.legend()
-ax.set_title("CDF of Relative LER Difference at Sweet")
+ax.set_title("CDF of Relative LER Diff at Sweet Point")
 ax.set_ylabel("CDF")
-ax.set_xlabel("Relative LER Difference at Sweet Point")
+ax.set_xlabel("Relative LER Diff at Sweet Point")
 ax.grid()
 ax.set_ylim(0, 1)
 ax.text(-0.2, 1.10, '(c)', transform=ax.transAxes, va='top', fontsize=12)
