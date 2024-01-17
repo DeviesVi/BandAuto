@@ -12,7 +12,7 @@ from utils import calculate_ler
 # fig 2a
 
 plt.figure(figsize=(8, 12), dpi=100)
-plt.rcParams.update({'font.size': 8})
+plt.rcParams.update({'font.size': 9})
 
 device_path = 'device_pool/device_d21_qdr0.02_cdr0.02/devices/device_f18efd2f3ded1a49e8011fd565ecb19bf277c3010172993707f78c633d2dac40.pkl'
 sample_dir = 'device_pool/device_d21_qdr0.02_cdr0.02/samples_over_holding_options_p0.002'
@@ -60,7 +60,7 @@ ax.set_title("LER vs Global Shell Size")
 ax.set_ylabel("LER")
 ax.set_xlabel("Global Shell Size")
 ax.legend()
-ax.text(-0.2, 1.10, '(a)', transform=ax.transAxes, va='top', fontsize=10)
+ax.text(-0.2, 1.10, '(a)', transform=ax.transAxes, va='top', fontsize=12)
 
 
 ax = plt.subplot(422)
@@ -78,7 +78,7 @@ ax.set_title("LER vs Local Shell Ratio")
 ax.set_ylabel("LER")
 ax.set_xlabel("Local Shell Ratio")
 ax.legend()
-ax.text(-0.2, 1.10, '(b)', transform=ax.transAxes, va='top', fontsize=10)
+ax.text(-0.2, 1.10, '(b)', transform=ax.transAxes, va='top', fontsize=12)
 
 # # fig 2c
 
@@ -165,7 +165,7 @@ ax.set_ylabel("CDF")
 ax.set_xlabel("Relative LER Difference at Sweet Point")
 ax.grid()
 ax.set_ylim(0, 1)
-ax.text(-0.2, 1.10, '(c)', transform=ax.transAxes, va='top', fontsize=10)
+ax.text(-0.2, 1.10, '(c)', transform=ax.transAxes, va='top', fontsize=12)
 
 # fig 2d
 device_dir = "device_pool/device_d21_qdr0.02_cdr0.02/devices"
@@ -262,7 +262,7 @@ ax.set_title("CDF of Sweet Point-Average Weight Ratio")
 ax.set_xlabel("Sweet Point-Average Weight Ratio")
 ax.set_ylabel("CDF")
 ax.set_ylim(0, 1)
-ax.text(-0.2, 1.10, '(d)', transform=ax.transAxes, va='top', fontsize=10)
+ax.text(-0.2, 1.10, '(d)', transform=ax.transAxes, va='top', fontsize=12)
 
 # fig 2e
 
@@ -369,7 +369,7 @@ plt.legend(
 ax.set_xlabel('p for SI1000 EM')
 ax.set_ylabel('LER')
 ax.set_title('LER over SI1000 p')
-ax.text(-0.09, 1.10, '(e)', transform=ax.transAxes, va='top', fontsize=10)
+ax.text(-0.09, 1.10, '(e)', transform=ax.transAxes, va='top', fontsize=12)
 
 
 plt.tight_layout()
