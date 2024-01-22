@@ -168,10 +168,10 @@ class Device:
         if clear_defect:
             self.clear_all_defect()
 
-        for x in range(x, x + 2 * width, 2):
-            for y in range(y, y + 2 * height, 2):
-                if (x, y) in self.graph.nodes:
-                    self.graph.nodes[(x, y)]['defective'] = True
+        for i in range(x, x + 2 * width, 2):
+            for j in range(y, y + 2 * height, 2):
+                if (i, j) in self.graph.nodes:
+                    self.graph.nodes[(i, j)]['defective'] = True
 
     def save(self, path: str):
         """Save the device to a file.
