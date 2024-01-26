@@ -35,30 +35,9 @@ def main():
     device1.add_ractangle_defect(9,9,1,1, clear_defect=False)
     device1.add_ractangle_defect(8,8,1,1, clear_defect=False)
 
-    legend = {
-        0: 'Bandage',
-        1: 'Trandition',
-    }
-
     samples = sampler.sample(gen_tasks([device0, device1]))
 
-    plt.figure(figsize=(8, 6), dpi=100)
-    ax = plt.subplot(111)
-    sinter.plot_error_rate(
-        ax=ax,
-        stats = samples,
-        group_func=lambda stat: f'{legend[stat.json_metadata["device_index"]]}|{stat.json_metadata["initial_state"]}>',
-        x_func=lambda stat: stat.json_metadata["specified_holding_cycle"],
-        highlight_max_likelihood_factor=1,
-        plot_args_func=lambda index, curve_id: {'marker': None},
-    )
-    ax.grid()
-    ax.set_title("LER vs Global Shell Size")
-    ax.set_ylabel("LER")
-    ax.set_xlabel("Global Shell Size")
-    ax.legend()
-    plt.savefig('bcmp.pdf', format='pdf')
-    plt.show()
+    pickle.dump(samples, open('sp_data/bcmp.pkl', 'wb'))
 
 
 if __name__ == '__main__':
