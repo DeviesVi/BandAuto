@@ -53,6 +53,8 @@ sinter.plot_error_rate(
     stats=spec_samples_zero + spec_samples_plus,
     group_func=lambda stat: f'G, $|{stat.json_metadata["initial_state"]}\\rangle$',
     x_func=lambda stat: stat.json_metadata["specified_holding_cycle"],
+    highlight_max_likelihood_factor=1,
+    plot_args_func=lambda index, curve_id: {'marker': None},
 )
 
 ax.grid()
@@ -70,6 +72,8 @@ sinter.plot_error_rate(
     stats=avg_samples_zero + avg_samples_plus + max_samples_zero + max_samples_plus,
     group_func=lambda stat: f'L{stat.json_metadata["holding_cycle_option"][5]}, $|{stat.json_metadata["initial_state"]}\\rangle$',
     x_func=lambda stat: stat.json_metadata["holding_cycle_ratio"],
+    highlight_max_likelihood_factor=1,
+    plot_args_func=lambda index, curve_id: {'marker': None},
 )
 
 ax.grid()
@@ -149,10 +153,10 @@ min_ler_relative_diff_cdf = {
 
 # Plot CDF using plt.step
 ax = plt.subplot(423)
-ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALAVG")]["0"], label="G-LA, $|0\\rangle$", color="blue", linewidth=2)
-ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALAVG")]["+"], label="G-LA, $|+\\rangle$", color="orange", linewidth=2)
-ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALMAX")]["0"], label="G-LM, $|0\\rangle$", color="green", linewidth=2)
-ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALMAX")]["+"], label="G-LM, $|+\\rangle$", color="red", linewidth=2)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALAVG")]["0"], label="G-LA, $|0\\rangle$", color="blue", linewidth=1)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALAVG")]["+"], label="G-LA, $|+\\rangle$", color="orange", linewidth=1)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALMAX")]["0"], label="G-LM, $|0\\rangle$", color="green", linewidth=1)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALMAX")]["+"], label="G-LM, $|+\\rangle$", color="red", linewidth=1)
 # Plot vertical line at median with x value on label
 ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALAVG")]["0"]), color="blue", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALAVG')]['0']):.2f}")
 ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALAVG")]["+"]), color="orange", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALAVG')]['+']):.2f}")
@@ -249,8 +253,8 @@ min_ler_pos_cdf = {
 
 ax = plt.subplot(424)
 # Plot SPECIFIED
-ax.step(min_ler_pos_cdf["SPECIFIED"]["0"][0], min_ler_pos_cdf["SPECIFIED"]["0"][1], label="G, $|0\\rangle$", linewidth=2, color="blue")
-ax.step(min_ler_pos_cdf["SPECIFIED"]["+"][0], min_ler_pos_cdf["SPECIFIED"]["+"][1], label="G, $|+\\rangle$", linewidth=2, color="orange")
+ax.step(min_ler_pos_cdf["SPECIFIED"]["0"][0], min_ler_pos_cdf["SPECIFIED"]["0"][1], label="G, $|0\\rangle$", linewidth=1, color="blue")
+ax.step(min_ler_pos_cdf["SPECIFIED"]["+"][0], min_ler_pos_cdf["SPECIFIED"]["+"][1], label="G, $|+\\rangle$", linewidth=1, color="orange")
 # Plot vertical line at median
 ax.axvline(np.median(min_ler_pos["SPECIFIED"]["0"]), color="blue", linestyle="--", label=f"Med.: {np.median(min_ler_pos['SPECIFIED']['0']):.2f}")
 ax.axvline(np.median(min_ler_pos["SPECIFIED"]["+"]), color="orange", linestyle="--", label=f"Med.: {np.median(min_ler_pos['SPECIFIED']['+']):.2f}")
