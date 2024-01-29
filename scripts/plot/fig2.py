@@ -153,15 +153,15 @@ min_ler_relative_diff_cdf = {
 
 # Plot CDF using plt.step
 ax = plt.subplot(423)
-ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALAVG")]["0"], label="G-LA, $|0\\rangle$", color="blue", linewidth=1)
-ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALAVG")]["+"], label="G-LA, $|+\\rangle$", color="orange", linewidth=1)
-ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALMAX")]["0"], label="G-LM, $|0\\rangle$", color="green", linewidth=1)
-ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALMAX")]["+"], label="G-LM, $|+\\rangle$", color="red", linewidth=1)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALAVG")]["0"], label="G-LA, $|0\\rangle$", color="C0", linewidth=1)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALAVG")]["+"], label="G-LA, $|+\\rangle$", color="C1", linewidth=1)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALMAX")]["0"], label="G-LM, $|0\\rangle$", color="C2", linewidth=1)
+ax.step(*min_ler_relative_diff_cdf[("SPECIFIED", "LOCALMAX")]["+"], label="G-LM, $|+\\rangle$", color="C3", linewidth=1)
 # Plot vertical line at median with x value on label
-ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALAVG")]["0"]), color="blue", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALAVG')]['0']):.2f}")
-ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALAVG")]["+"]), color="orange", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALAVG')]['+']):.2f}")
-ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["0"]), color="green", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALMAX')]['0']):.2f}")
-ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["+"]), color="red", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALMAX')]['+']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALAVG")]["0"]), color="C0", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALAVG')]['0']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALAVG")]["+"]), color="C1", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALAVG')]['+']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["0"]), color="C2", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALMAX')]['0']):.2f}")
+ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["+"]), color="C3", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALMAX')]['+']):.2f}")
 
 ax.legend()
 ax.set_title("CDF of Relative LER Diff at Sweet Point")
@@ -253,11 +253,11 @@ min_ler_pos_cdf = {
 
 ax = plt.subplot(424)
 # Plot SPECIFIED
-ax.step(min_ler_pos_cdf["SPECIFIED"]["0"][0], min_ler_pos_cdf["SPECIFIED"]["0"][1], label="G, $|0\\rangle$", linewidth=1, color="blue")
-ax.step(min_ler_pos_cdf["SPECIFIED"]["+"][0], min_ler_pos_cdf["SPECIFIED"]["+"][1], label="G, $|+\\rangle$", linewidth=1, color="orange")
+ax.step(min_ler_pos_cdf["SPECIFIED"]["0"][0], min_ler_pos_cdf["SPECIFIED"]["0"][1], label="G, $|0\\rangle$", linewidth=1, color="C0")
+ax.step(min_ler_pos_cdf["SPECIFIED"]["+"][0], min_ler_pos_cdf["SPECIFIED"]["+"][1], label="G, $|+\\rangle$", linewidth=1, color="C1")
 # Plot vertical line at median
-ax.axvline(np.median(min_ler_pos["SPECIFIED"]["0"]), color="blue", linestyle="--", label=f"Med.: {np.median(min_ler_pos['SPECIFIED']['0']):.2f}")
-ax.axvline(np.median(min_ler_pos["SPECIFIED"]["+"]), color="orange", linestyle="--", label=f"Med.: {np.median(min_ler_pos['SPECIFIED']['+']):.2f}")
+ax.axvline(np.median(min_ler_pos["SPECIFIED"]["0"]), color="C0", linestyle="--", label=f"Med.: {np.median(min_ler_pos['SPECIFIED']['0']):.2f}")
+ax.axvline(np.median(min_ler_pos["SPECIFIED"]["+"]), color="C1", linestyle="--", label=f"Med.: {np.median(min_ler_pos['SPECIFIED']['+']):.2f}")
 
 
 ax.legend()
