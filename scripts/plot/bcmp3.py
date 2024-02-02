@@ -4,7 +4,7 @@ import sinter
 from typing import List
 from utils import calculate_ler
 
-samples: List[sinter.TaskStats] = pickle.load(open('sp_data/bcmp.pkl', 'rb'))
+samples: List[sinter.TaskStats] = pickle.load(open('sp_data/bcmp3.pkl', 'rb'))
 
 plt.figure(figsize=(8, 6), dpi=100)
 ax = plt.subplot(111)
@@ -26,7 +26,7 @@ ax.set_title("LER vs Global Shell Size")
 ax.set_ylabel("LER")
 ax.set_xlabel("Global Shell Size")
 ax.legend()
-plt.savefig('bcmp.pdf', format='pdf')
+plt.savefig('bcmp3.pdf', format='pdf')
 plt.show()
 
 # Print lowest point y value for each curve
