@@ -38,7 +38,7 @@ class Adapter:
         cls._adapt_options = adapt_options
 
         cls._boundary_deformation()
-        cls._interal_defect_handler()
+        cls._internal_defect_handler()
         cls._search_stabilizers()
         cls._place_logical_operator()
         cls._record_current_boundary()
@@ -266,7 +266,7 @@ class Adapter:
         return BoundaryNodeType.N
 
     @classmethod
-    def _interal_defect_handler(cls):
+    def _internal_defect_handler(cls):
         """Handle internal defects. If disabled internal node, record it."""
 
         # Handle internal defective syndrome.
