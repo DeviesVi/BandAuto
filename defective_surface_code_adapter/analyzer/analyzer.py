@@ -4,17 +4,20 @@ import numpy as np
 import networkx as nx
 from typing import List, Tuple
 
-from ..adapter import Adapter
+from ..adapter import Adapter, TraditionalAdapter
 from ..device import Device
 from .data import AnalysisResult
 
 class Analyzer:
     @classmethod
-    def analyze_device(cls, device: Device) -> AnalysisResult:
+    def analyze_device(cls, device: Device, traditional_adapter: bool = False) -> AnalysisResult:
         """Analyze the device to get the two main factor of defective surface code"""
 
         cls._device = device
-        cls._adapt_result = Adapter.adapt_device(device=device)
+        if traditional_adapter:
+            cls._adapt_result = TraditionalAdapter.adapt_device(device=device)
+        else:
+            cls._adapt_result = Adapter.adapt_device(device=device)
 
         x_shortest_distance, x_shortest_paths_count = cls._analyze_error_type('X')
         z_shortest_distance, z_shortest_paths_count = cls._analyze_error_type('Z')
