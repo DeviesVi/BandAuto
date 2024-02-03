@@ -11,7 +11,7 @@ ax = plt.subplot(111)
 
 legend = {
         0: 'Bandage',
-        1: 'Trandition',
+        1: 'Tradition',
     }
 sinter.plot_error_rate(
     ax=ax,
