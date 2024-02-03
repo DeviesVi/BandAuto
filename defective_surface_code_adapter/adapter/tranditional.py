@@ -63,6 +63,8 @@ class TraditionalAdapter(Adapter):
             if (cls._get_node_type(node) == "X" or cls._get_node_type(node) == "Z")
             and not cls._is_disabled_node(node)
             and len(cls._get_undisabled_neighbors(node)) == 1
+            and cls._get_boundary_data_type(cls._get_undisabled_neighbors(node)[0]) == BoundaryNodeType.N
+            # If the syndrome node's neighbor is in boundary, do not clean it to push boundary inwards.
         ]
 
         # Disable all of them.
