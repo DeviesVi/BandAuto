@@ -19,8 +19,8 @@ class Analyzer:
         else:
             cls._adapt_result = Adapter.adapt_device(device=device)
 
-        x_shortest_distance, x_shortest_paths_count = cls._analyze_error_type('X')
-        z_shortest_distance, z_shortest_paths_count = cls._analyze_error_type('Z')
+        x_shortest_distance, x_shortest_path_count = cls._analyze_error_type('X')
+        z_shortest_distance, z_shortest_path_count = cls._analyze_error_type('Z')
 
         super_stabilizer_weights = [len(cls._data_in_stabilizer(stabilizer)) for stabilizer in cls._adapt_result.stabilizers if len(stabilizer) > 1]
         super_stabilizer_weights_x = [len(cls._data_in_stabilizer(stabilizer)) for stabilizer in cls._adapt_result.stabilizers if len(stabilizer) > 1 and cls._get_stabilizer_type(stabilizer) == 'X']
@@ -28,13 +28,18 @@ class Analyzer:
 
         max_stabilizer_weight, min_stabilizer_weight, me_stabilizer_weight, avg_stabilizer_weight = cls._calculate_statistics(super_stabilizer_weights)
         max_stabilizer_weight_x, min_stabilizer_weight_x, me_stabilizer_weight_x, avg_stabilizer_weight_x = cls._calculate_statistics(super_stabilizer_weights_x)
-        max_stabilizer_weight_z, min_stabilizer_weight_z, me_stabilizer_weight_z, avg_stabilizer_weight_z = cls._calculate_statistics(super_stabilizer_weights_z)               
+        max_stabilizer_weight_z, min_stabilizer_weight_z, me_stabilizer_weight_z, avg_stabilizer_weight_z = cls._calculate_statistics(super_stabilizer_weights_z)
+
+        disalbed_qubit_count = len(cls._adapt_result.disabled_nodes)
+        disabled_qubit_percentage = disalbed_qubit_count / len(cls._device.graph.nodes)
 
         return AnalysisResult(
             x_distance=x_shortest_distance,
-            x_shortest_paths_count=x_shortest_paths_count,
+            x_shortest_path_count=x_shortest_path_count,
             z_distance=z_shortest_distance,
-            z_shortest_paths_count=z_shortest_paths_count,
+            z_shortest_path_count=z_shortest_path_count,
+            disalbed_qubit_count=disalbed_qubit_count,
+            disabled_qubit_percentage=disabled_qubit_percentage,
             stabilizer_statistics={
                 'max_stabilizer_weight': max_stabilizer_weight,
                 'min_stabilizer_weight': min_stabilizer_weight,
@@ -55,31 +60,31 @@ class Analyzer:
     def _calculate_statistics(cls, weights):
         if len(weights) > 0:
             return (
-                np.max(weights),
-                np.min(weights),
-                np.median(weights),
-                np.mean(weights)
+                int(np.max(weights)),
+                int(np.min(weights)),
+                int(np.median(weights)),
+                float(np.mean(weights))
             )
         else:
             return (None, None, None, None)
         
     @classmethod
     def _analyze_error_type(cls, error_type: str) -> Tuple[int, int]:
-        """Analyze the device to get the shortest distance and shortest paths count of error type.
+        """Analyze the device to get the shortest distance and shortest path count of error type.
             Args:
                 error_type: The error type to analyze.
 
             Returns:
-                A tuple of shortest distance and shortest paths count.
+                A tuple of shortest distance and shortest path count.
         """
 
         assert error_type in ['X', 'Z']
 
         sources, targets = cls._get_sources_and_targets(error_type)
 
-        shortest_distance, shortest_paths_count = cls._shortest_distance_and_path_count(sources=sources, targets=targets, error_type=error_type)
+        shortest_distance, shortest_path_count = cls._shortest_distance_and_path_count(sources=sources, targets=targets, error_type=error_type)
 
-        return shortest_distance, shortest_paths_count
+        return shortest_distance, shortest_path_count
     
     @classmethod
     def _get_sources_and_targets(cls, error_type: str) -> Tuple[List[tuple], List[tuple]]:
@@ -145,10 +150,10 @@ class Analyzer:
         # Get all shortest paths from start to end.
         shortest_paths = nx.all_shortest_paths(cls._logical_operator_search_graph, source='start', target='end')
         shortest_paths = list(shortest_paths)
-        shortest_paths_count = len(shortest_paths)
+        shortest_path_count = len(shortest_paths)
         shortest_distance = len(shortest_paths[0]) - 2 # minus start and end nodes.
 
-        return shortest_distance, shortest_paths_count
+        return shortest_distance, shortest_path_count
 
     # Utility functions
     @classmethod

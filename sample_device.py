@@ -53,8 +53,8 @@ logical_operator_nodes = result.logical_x_data_qubits + result.logical_z_data_qu
 ana_result = Analyzer.analyze_device(device)
 
 print(ana_result)
-print(log(ana_result.x_shortest_paths_count))
-print(log(ana_result.z_shortest_paths_count))
+print(log(ana_result.x_shortest_path_count))
+print(log(ana_result.z_shortest_path_count))
 
 plot_graph(device.graph, result.disabled_nodes, logical_operator_nodes=result.logical_x_data_qubits)
 
