@@ -362,9 +362,9 @@ plt.yscale('log')
 
 plt.legend(
     handles=[
-        Patch(facecolor='#2ca02c', label='Sweet Point Shell'),
-        Patch(facecolor='#1f77b4', label='0.36xAvg Weight Shell'),
-        Patch(facecolor='#d62728', label='Shell Size = 1 (No Shell)'),
+        Patch(facecolor='#2ca02c', edgecolor='black', label='Sweet Point Shell'),
+        Patch(facecolor='#1f77b4', edgecolor='black', label='0.36xAvg Weight Shell'),
+        Patch(facecolor='#d62728', edgecolor='black', label='Shell Size = 1 (No Shell)'),
     ],
     loc='upper left',
 )

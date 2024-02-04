@@ -131,7 +131,7 @@ plt.xticks(np.arange(1, 4), [15, 21, 27])
 # set y to log scale
 plt.yscale('log')
 legend_handles = [
-    Patch(facecolor=color_box[dr], label=f'Defect rate={dr}')
+    Patch(facecolor=color_box[dr], edgecolor='black', label=f'Defect rate={dr}')
     for dr in defect_rates
 ] + [Line2D([0], [0], label=f'Perfect SI1000 p={p}', color=color_line[p], marker=markers[p]) for p in perfect_SI1000_p]
 
