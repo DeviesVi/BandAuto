@@ -13,6 +13,8 @@ color = itertools.cycle(
     ("#ff7f0e", "#ff7f0e", "#1f77b4", "#1f77b4", "#2ca02c", "#2ca02c")
 )
 
+notation_positions = (-0.15, 1)
+
 markersize = 4
 legend_fontsize = 10
 
@@ -23,7 +25,7 @@ defect_rates = [0.005, 0.01, 0.015, 0.02]
 with open("sp_data/cmp_statistics.json", "r") as f:
     results: Dict[str, Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]] = json.load(f)
 
-plt.subplot(221)
+ax = plt.subplot(221)
 
 for d in distances:
     plt.plot(
@@ -62,12 +64,14 @@ for d in distances:
     )
 
 plt.xticks(defect_rates)
-plt.xlabel("Defect rate")
+plt.xlabel("Defect Rate")
 plt.ylabel("Average X Distance")
 plt.legend(fontsize=legend_fontsize)
 plt.grid()
 
-plt.subplot(222)
+ax.text(*notation_positions, '(a)', transform=ax.transAxes, va='top', fontsize=12)
+
+ax = plt.subplot(222)
 
 for d in distances:
     plt.plot(
@@ -106,12 +110,14 @@ for d in distances:
     )
 
 plt.xticks(defect_rates)
-plt.xlabel("Defect rate")
+plt.xlabel("Defect Rate")
 plt.ylabel("Average Z Distance")
 plt.legend(fontsize=legend_fontsize)
 plt.grid()
 
-plt.subplot(223)
+ax.text(*notation_positions, '(b)', transform=ax.transAxes, va='top', fontsize=12)
+
+ax = plt.subplot(223)
 
 for d in distances:
     plt.plot(
@@ -150,12 +156,14 @@ for d in distances:
     )
 
 plt.xticks(defect_rates)
-plt.xlabel("Defect rate")
+plt.xlabel("Defect Rate")
 plt.ylabel("Average Disabled Qubit Percentage")
 plt.legend(fontsize=legend_fontsize)
 plt.grid()
 
-plt.subplot(224)
+ax.text(*notation_positions, '(c)', transform=ax.transAxes, va='top', fontsize=12)
+
+ax = plt.subplot(224)
 
 for d in distances:
     plt.plot(
@@ -204,10 +212,12 @@ for d in distances:
     )
 
 plt.xticks(defect_rates)
-plt.xlabel("Defect rate")
+plt.xlabel("Defect Rate")
 plt.ylabel("Average Super-Stabilizer Weight")
 plt.legend(fontsize=legend_fontsize)
 plt.grid()
+
+ax.text(*notation_positions, '(d)', transform=ax.transAxes, va='top', fontsize=12)
 
 
 plt.savefig("cmp_statistics.pdf", format="pdf")
