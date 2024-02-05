@@ -137,7 +137,6 @@ legend_handles = [
 
 plt.legend(handles=legend_handles)
 
-plt.title('LER vs Distance (Defective Device SI1000 p=0.002)')
 plt.grid()
 plt.xlabel('Distance')
 plt.ylabel('LER')

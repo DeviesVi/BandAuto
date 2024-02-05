@@ -58,7 +58,6 @@ sinter.plot_error_rate(
 )
 
 ax.grid()
-ax.set_title("LER vs Global Shell Size")
 ax.set_ylabel("LER")
 ax.set_xlabel("Global Shell Size")
 ax.legend()
@@ -78,7 +77,6 @@ sinter.plot_error_rate(
 
 ax.grid()
 ax.set_ylim(0.0075, 0.040)
-ax.set_title("LER vs Local Shell Ratio")
 ax.set_ylabel("LER")
 ax.set_xlabel("Local Shell Ratio")
 ax.legend()
@@ -164,7 +162,6 @@ ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["0"]), c
 ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["+"]), color="C3", linestyle="--", label=f"Med.: {np.median(min_ler_relative_diff[('SPECIFIED', 'LOCALMAX')]['+']):.2f}")
 
 ax.legend()
-ax.set_title("CDF of Relative LER Diff at Sweet Point")
 ax.set_ylabel("CDF")
 ax.set_xlabel("Relative LER Diff at Sweet Point")
 ax.grid()
@@ -262,7 +259,6 @@ ax.axvline(np.median(min_ler_pos["SPECIFIED"]["+"]), color="C1", linestyle="--",
 
 ax.legend()
 ax.grid()
-ax.set_title("CDF of Sweet Point-Average Weight Ratio")
 ax.set_xlabel("Sweet Point-Average Weight Ratio")
 ax.set_ylabel("CDF")
 ax.set_ylim(0, 1)
@@ -369,10 +365,9 @@ plt.legend(
     loc='upper left',
 )
 
-# Set labels and title
+# Set labels
 ax.set_xlabel('p for SI1000 EM')
 ax.set_ylabel('LER')
-ax.set_title('LER over SI1000 p')
 ax.text(-0.09, 1.10, '(e)', transform=ax.transAxes, va='top', fontsize=12)
 
 
