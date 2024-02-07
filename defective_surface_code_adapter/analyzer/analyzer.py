@@ -10,7 +10,7 @@ from .data import AnalysisResult
 
 class Analyzer:
     @classmethod
-    def analyze_device(cls, device: Device, traditional_adapter: bool = False) -> AnalysisResult:
+    def analyze_device(cls, device: Device, traditional_adapter: bool = False, skip_shortest_path: bool = False) -> AnalysisResult:
         """Analyze the device to get the two main factor of defective surface code"""
 
         cls._device = device
@@ -19,8 +19,12 @@ class Analyzer:
         else:
             cls._adapt_result = Adapter.adapt_device(device=device)
 
-        x_shortest_distance, x_shortest_path_count = cls._analyze_error_type('X')
-        z_shortest_distance, z_shortest_path_count = cls._analyze_error_type('Z')
+        if not skip_shortest_path:
+            x_shortest_distance, x_shortest_path_count = cls._analyze_error_type('X')
+            z_shortest_distance, z_shortest_path_count = cls._analyze_error_type('Z')
+        else:
+            x_shortest_distance, x_shortest_path_count = None, None
+            z_shortest_distance, z_shortest_path_count = None, None
 
         super_stabilizer_weights = [len(cls._data_in_stabilizer(stabilizer)) for stabilizer in cls._adapt_result.stabilizers if len(stabilizer) > 1]
         super_stabilizer_weights_x = [len(cls._data_in_stabilizer(stabilizer)) for stabilizer in cls._adapt_result.stabilizers if len(stabilizer) > 1 and cls._get_stabilizer_type(stabilizer) == 'X']
