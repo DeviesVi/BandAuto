@@ -47,18 +47,21 @@ for i in range(2):
 
 
 
-
+plt.figure(figsize=(8, 6), dpi=100)
 for s in ['0', '+']:
-    plt.figure(figsize=(8, 6), dpi=100)
-    plt.plot(range(1, 4), results[s][0], label=f'Bandage |{s}>', marker='o')
-    plt.plot(range(1, 4), results[s][1], label=f'Tradition |{s}>', marker='*')
+    if s == '0':
+        plt.plot(range(1, 4), results[s][0], label=f'Bandage |{s}>', marker='o', color='C0')
+        plt.plot(range(1, 4), results[s][1], label=f'Tradition |{s}>', marker='o', linestyle='--', color='C0')
+    else:
+        plt.plot(range(1, 4), results[s][0], label=f'Bandage |{s}>', marker='^', color='C2')
+        plt.plot(range(1, 4), results[s][1], label=f'Tradition |{s}>', marker='^', linestyle='--', color='C2')
     
     # Set x-ticks to integers
-    plt.xticks(range(1, 4))
-    plt.xlabel('Defective Data Qubits')
-    plt.ylabel('Logical Error Rate')
-    plt.title(f'Logical Error Rate for Initial State |{s}>')
-    plt.legend()
-    plt.grid()
-    
-    plt.show()
+plt.xticks(range(1, 4))
+plt.xlabel('Defective Data Qubits')
+plt.ylabel('LER')
+plt.legend()
+plt.grid()
+
+plt.savefig('cmp_defect.pdf', format='pdf')
+plt.show()
