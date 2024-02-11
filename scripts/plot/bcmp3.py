@@ -19,7 +19,11 @@ sinter.plot_error_rate(
     group_func=lambda stat: f'{legend[stat.json_metadata["device_index"]]}|{stat.json_metadata["initial_state"]}>',
     x_func=lambda stat: stat.json_metadata["specified_holding_cycle"],
     highlight_max_likelihood_factor=1,
-    plot_args_func=lambda index, curve_id: {'marker': None},
+    plot_args_func=lambda index, curve_id: {
+        'linestyle': '--' if index in [2, 3] else '-',
+        'color': 'C0' if index in [0, 2] else 'C2',
+        'marker': 'o' if index in [0, 2] else '^',
+    },
 )
 ax.grid()
 ax.set_title("LER vs Global Shell Size")
