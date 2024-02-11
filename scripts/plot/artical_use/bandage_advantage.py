@@ -18,7 +18,7 @@ color = itertools.cycle(
     ("#ff7f0e", "#ff7f0e", "#1f77b4", "#1f77b4", "#2ca02c", "#2ca02c")
 )
 
-notation_positions = (-0.2, 1)
+notation_positions = (-0.22, 1)
 notation_fontsize = 12
 markersize = 4
 legend_fontsize = 8
@@ -218,7 +218,7 @@ for d in distances:
 
 plt.xticks(defect_rates)
 plt.xlabel("Defect Rate")
-plt.ylabel("Avg. Super-Stab. Weight")
+plt.ylabel("Avg. of Avg. Super-Stab. Weight")
 plt.legend(fontsize=legend_fontsize)
 plt.grid()
 
