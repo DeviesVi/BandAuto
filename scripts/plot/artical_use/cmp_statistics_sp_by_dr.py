@@ -80,7 +80,7 @@ for d in distances:
         capprops=dict(linewidth=linewidth),
     )
 
-plt.xticks(np.arange(1, 5), [0.005, 0.01, 0.015, 0.02])
+plt.xticks(np.arange(1, 5), defect_rates)
 
 legend_handles = [
     Patch(facecolor=color_box[d], edgecolor='black', label=f"B, L={d}", linewidth=linewidth) for d in distances
@@ -135,7 +135,7 @@ for d in distances:
         capprops=dict(linewidth=linewidth),
     )
 
-plt.xticks(np.arange(1, 5), [0.005, 0.01, 0.015, 0.02])
+plt.xticks(np.arange(1, 5), defect_rates)
 
 legend_handles = [
     Patch(facecolor=color_box[d], edgecolor='black', label=f"B, L={d}", linewidth=linewidth) for d in distances
@@ -190,7 +190,7 @@ for d in distances:
         capprops=dict(linewidth=linewidth),
     )
 
-plt.xticks(np.arange(1, 5), [0.005, 0.01, 0.015, 0.02])
+plt.xticks(np.arange(1, 5), defect_rates)
 
 legend_handles = [
     Patch(facecolor=color_box[d], edgecolor='black', label=f"B, L={d}", linewidth=linewidth) for d in distances
@@ -247,7 +247,7 @@ for d in distances:
         capprops=dict(linewidth=linewidth),
     )
 
-plt.xticks(np.arange(1, 5), [0.005, 0.01, 0.015, 0.02])
+plt.xticks(np.arange(1, 5), defect_rates)
 
 legend_handles = [
     Patch(facecolor=color_box[d], edgecolor='black', label=f"B, L={d}", linewidth=linewidth) for d in distances
@@ -306,7 +306,7 @@ for d in distances:
         showfliers=False,
     )
 
-plt.xticks(np.arange(1, 5), [0.005, 0.01, 0.015, 0.02])
+plt.xticks(np.arange(1, 5), defect_rates)
 
 legend_handles = [
     Patch(facecolor=color_box[d], edgecolor='black', label=f"B, L={d}", linewidth=linewidth) for d in distances
