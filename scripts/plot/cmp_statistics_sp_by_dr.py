@@ -7,7 +7,8 @@ from matplotlib.patches import Patch
 
 legend_fontsize = 8
 
-
+notation_positions = (-0.25, 1)
+notation_fontsize = 12
 distances = [15, 21, 27]
 defect_rates = [0.005, 0.01, 0.015, 0.02]
 linewidth = 0.3
@@ -38,8 +39,10 @@ color_box_dark = {
     27: '#2ca02c',
 }
 
+plt.figure(figsize=(12, 6), dpi=100)
+
 # x_distance
-plt.figure(figsize=(8, 6), dpi=100)
+ax = plt.subplot(231)
 for d in distances:
     plt.boxplot(
         [
@@ -90,10 +93,11 @@ plt.legend(handles=legend_handles, ncol=2, fontsize=legend_fontsize)
 plt.grid()
 plt.xlabel("Defect Rate")
 plt.ylabel("X Distance")
-plt.savefig('x_distance_sp.pdf', format='pdf')
+
+ax.text(*notation_positions, '(a)', transform=ax.transAxes, va='top', fontsize=notation_fontsize)
 
 # z_distance
-plt.figure(figsize=(8, 6), dpi=100)
+ax = plt.subplot(234)
 for d in distances:
     plt.boxplot(
         [
@@ -144,10 +148,11 @@ plt.legend(handles=legend_handles, ncol=2, fontsize=legend_fontsize)
 plt.grid()
 plt.xlabel("Defect Rate")
 plt.ylabel("Z Distance")
-plt.savefig('z_distance_sp.pdf', format='pdf')
+
+ax.text(*notation_positions, '(b)', transform=ax.transAxes, va='top', fontsize=notation_fontsize)
 
 # disabled qubit percentage
-plt.figure(figsize=(8, 6), dpi=100)
+ax = plt.subplot(232)
 for d in distances:
     plt.boxplot(
         [
@@ -198,10 +203,11 @@ plt.legend(handles=legend_handles, ncol=2, fontsize=legend_fontsize)
 plt.grid()
 plt.xlabel("Defect Rate")
 plt.ylabel("Disabled Qubit Pct.")
-plt.savefig('percentage_sp.pdf', format='pdf')
+
+ax.text(*notation_positions, '(c)', transform=ax.transAxes, va='top', fontsize=notation_fontsize)
 
 # average super-stabilizer weight
-plt.figure(figsize=(8, 6), dpi=100)
+ax = plt.subplot(235)
 for d in distances:
     plt.boxplot(
         [
@@ -254,10 +260,11 @@ plt.legend(handles=legend_handles, ncol=2, fontsize=legend_fontsize)
 plt.grid()
 plt.xlabel("Defect Rate")
 plt.ylabel("Avg. Super-Stab. Weight")
-plt.savefig('weight_sp.pdf', format='pdf')
+
+ax.text(*notation_positions, '(d)', transform=ax.transAxes, va='top', fontsize=notation_fontsize)
 
 # average super-stabilizer weight no flier
-plt.figure(figsize=(8, 6), dpi=100)
+ax = plt.subplot(233)
 for d in distances:
     plt.boxplot(
         [
@@ -312,4 +319,9 @@ plt.legend(handles=legend_handles, ncol=2, fontsize=legend_fontsize)
 plt.grid()
 plt.xlabel("Defect Rate")
 plt.ylabel("Avg. Super-Stab. Weight")
-plt.savefig('weight_sp_no_flier.pdf', format='pdf')
+
+ax.text(*notation_positions, '(e)', transform=ax.transAxes, va='top', fontsize=notation_fontsize)
+
+plt.tight_layout()
+
+plt.savefig('bandage_advantage_sp.pdf', format='pdf')
