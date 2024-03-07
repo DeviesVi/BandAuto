@@ -33,7 +33,19 @@ plt.savefig('bcmp.pdf', format='pdf')
 plt.show()
 
 # Print lowest point y value for each curve
+result = {"0": {"0": 0, "+": 0}, "1": {"0": 0, "+": 0}}
 for i in range(2):
-    for s in ['0', '+']:
-        filter_func = lambda stat: stat.json_metadata["initial_state"] == s and stat.json_metadata["device_index"] == i
-        print(f'Lowest LER for curve {i}|{s}>: {min([calculate_ler(stat) for stat in filter(filter_func, samples)])}')
+    for s in ["0", "+"]:
+        filter_func = (
+            lambda stat: stat.json_metadata["initial_state"] == s
+            and stat.json_metadata["device_index"] == i
+        )
+        print(
+            f"Lowest LER for curve {i}|{s}>: {min([calculate_ler(stat) for stat in filter(filter_func, samples)])}"
+        )
+        result[str(i)][s] = min(
+            [calculate_ler(stat) for stat in filter(filter_func, samples)]
+        )
+
+print('0 state improvement: ', (result["1"]["0"] - result["0"]["0"]) / result["1"]["0"])
+print('+ state improvement: ', (result["1"]["+"] - result["0"]["+"]) / result["1"]["+"])
