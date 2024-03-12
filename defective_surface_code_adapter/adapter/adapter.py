@@ -55,28 +55,18 @@ class Adapter:
 
         # Handle all boundaries until no unsafe boundary data exist.
         while True:
-            # Get all unsafe boundary data.
-            unsafe_boundary_data = cls._get_unsafe_boundary_data()
-
-            # If no unsafe boundary data, break.
-            if len(unsafe_boundary_data) == 0:
-                break
-
-            # Handle all unsafe boundary data.
-            for boundary_node in unsafe_boundary_data:
-                # Handle the boundary data.
-                cls._boundary_unsafe_data_handler(boundary_node)
-
-    @classmethod
-    def _get_unsafe_boundary_data(cls) -> List[tuple]:
-        """Get all unsafe boundary data.
-            Returns:
-                A list of unsafe boundary data.
-        """
-        # Get all undisabled node in boundaries.
-        boundary_nodes = set(node for boundary in cls._boundaries.values()
+            cls._safe_boundary_flag = True
+            # Get all boundary data.
+            boundary_nodes = set(node for boundary in cls._boundaries.values()
                           for node in boundary.nodes if not cls._is_disabled_node(node))
-        return [node for node in boundary_nodes if not cls._boundary_data_safety_check(node)]
+
+            for node in boundary_nodes:
+                if not cls._boundary_data_safety_check(node):
+                    cls._safe_boundary_flag = False
+                    cls._boundary_unsafe_data_handler(node)
+
+            if cls._safe_boundary_flag:
+                break
 
     @classmethod
     def _boundary_unsafe_data_handler(cls, node: tuple):
@@ -99,98 +89,89 @@ class Adapter:
                 node: The node to handle.
         """
         node_type = cls._get_boundary_data_type(node)
+        assert node_type != BoundaryNodeType.N, f'Node {node} is not a boundary data.'
         involved_boundaries = cls._node_in_boundaries(node)
 
-        cls._new_boundary_data = []
+        sf = cls._get_frontier(node)
 
-        # Clean defect syndrome in frontier.
-        for syndrome in cls._get_frontier(node):
+        for syndrome in sf:
+            # Clean defect syndrome in frontier.
             if cls._is_defective_node(syndrome):
-                cls._frontier_syndrome_cleaner(syndrome, involved_boundaries)
+                cls._frontier_syndrome_cleaner(syndrome)
+                continue
 
-        # If syndrome has less than 2 undisabled neighbors, clean it.
-        for syndrome in cls._get_frontier(node):
-            if len(cls._get_undisabled_neighbors(syndrome)) < 2:
-                cls._frontier_syndrome_cleaner(syndrome, involved_boundaries)
+            # If syndrome has no undisabled neighbors, clean it due to isolation.
+            if len(cls._get_undisabled_neighbors(syndrome)) == 0:
+                cls._frontier_syndrome_cleaner(syndrome)
+                continue
 
+            if cls._get_node_type(syndrome) == 'X' and node_type == BoundaryNodeType.Z:
+                # Clean undisabled Z syndromes in frontier.
+                cls._frontier_syndrome_cleaner(syndrome)
+                continue
+
+            if cls._get_node_type(syndrome) == 'Z' and node_type == BoundaryNodeType.X:
+                # Clean undisabled X syndromes in frontier.
+                cls._frontier_syndrome_cleaner(syndrome)
+                continue
+
+        if node_type == BoundaryNodeType.C:
+            sf_ = cls._get_frontier(node)
+            if len(sf_) == 2:
+                # Disable syndrome in sf_ with fewer undisabled neighbors.
+                if len(cls._get_undisabled_neighbors(sf_[0])) < len(cls._get_undisabled_neighbors(sf_[1])):
+                    cls._frontier_syndrome_cleaner(sf_[0])
+                else:
+                    cls._frontier_syndrome_cleaner(sf_[1])
+
+        # Get undisabled data nodes sharing disabled syndrome nodes with the boundary data.
+        # Get all disabled syndrome nodes neighbors which has undisabled neighbors.
+        sd = [syndrome for syndrome in cls._get_disabled_neighbors(node) if len(cls._get_undisabled_neighbors(syndrome)) > 0]
+        
         if node_type == BoundaryNodeType.X:
-            # Clean all undisabled Z syndromes in frontier.
-            for neighbor in cls._get_frontier(node):
-                if cls._get_node_type(neighbor) == 'Z':
-                    if not cls._is_disabled_node(neighbor):
-                        cls._frontier_syndrome_cleaner(neighbor, involved_boundaries)
-
-            # Add all new boundary data to XT or XB if involved.
-            if BoundaryType.XT in involved_boundaries:
-                cls._boundaries[BoundaryType.XT].add_nodes(cls._new_boundary_data)
-            if BoundaryType.XB in involved_boundaries:
-                cls._boundaries[BoundaryType.XB].add_nodes(cls._new_boundary_data)
+            for s in sd:
+                n_new = cls._get_undisabled_neighbors(s)
+                # Add all new boundary data to XT or XB if involved.
+                if BoundaryType.XT in involved_boundaries:
+                    cls._boundaries[BoundaryType.XT].add_nodes(n_new)
+                if BoundaryType.XB in involved_boundaries:
+                    cls._boundaries[BoundaryType.XB].add_nodes(n_new)
 
         elif node_type == BoundaryNodeType.Z:
-            # Clean all undisabled X syndromes in frontier.
-            for neighbor in cls._get_frontier(node):
-                if cls._get_node_type(neighbor) == 'X':
-                    if not cls._is_disabled_node(neighbor):
-                        cls._frontier_syndrome_cleaner(neighbor, involved_boundaries)
-
-            # Add all new boundary data to ZL or ZR if involved.
-            if BoundaryType.ZL in involved_boundaries:
-                cls._boundaries[BoundaryType.ZL].add_nodes(cls._new_boundary_data)
-            if BoundaryType.ZR in involved_boundaries:
-                cls._boundaries[BoundaryType.ZR].add_nodes(cls._new_boundary_data)
+            for s in sd:
+                n_new = cls._get_undisabled_neighbors(s)
+                # Add all new boundary data to ZL or ZR if involved.
+                if BoundaryType.ZL in involved_boundaries:
+                    cls._boundaries[BoundaryType.ZL].add_nodes(n_new)
+                if BoundaryType.ZR in involved_boundaries:
+                    cls._boundaries[BoundaryType.ZR].add_nodes(n_new)
 
         elif node_type == BoundaryNodeType.C:
-            # In this situation, the node no more than 2 undisabled neighbors.
-            # If has 2 undisabled neighbors, they must be X and Z syndrome, disable the one with less undisabled neighbors.
-            if len(cls._get_frontier(node)) == 2:
-                if len(cls._get_undisabled_neighbors(cls._get_frontier(node)[0])) < len(cls._get_undisabled_neighbors(cls._get_frontier(node)[1])):
-                    cls._frontier_syndrome_cleaner(cls._get_frontier(node)[0], involved_boundaries)
+            if len(sd) == 1:
+                s = sd[0]
+            elif len(sd) == 2:
+                if len(cls._get_undisabled_neighbors(sd[0])) > len(cls._get_undisabled_neighbors(sd[1])):
+                    s = sd[0]
                 else:
-                    cls._frontier_syndrome_cleaner(cls._get_frontier(node)[1], involved_boundaries)
-            # If has 1 undisabled neighbors, do nothing.
-
-            # Count frontier type of new boundary data.
-            z_frontier_count = 0
-            x_frontier_count = 0
-            for neighbor in cls._new_boundary_data:
-                if cls._frontier_type(neighbor) == BoundaryNodeType.Z:
-                    z_frontier_count += 1
-                elif cls._frontier_type(neighbor) == BoundaryNodeType.X:
-                    x_frontier_count += 1
-
-            # If new boundary data has more Z frontier, add it to ZL or ZR if involved.
-            if z_frontier_count > x_frontier_count:
+                    s = sd[1]
+            if cls._get_node_type(s) == 'X':
+                n_new = cls._get_undisabled_neighbors(s)
+                # Add all new boundary data to ZL or ZR if involved.
                 if BoundaryType.ZL in involved_boundaries:
-                    cls._boundaries[BoundaryType.ZL].add_nodes(cls._new_boundary_data)
+                    cls._boundaries[BoundaryType.ZL].add_nodes(n_new)
                 if BoundaryType.ZR in involved_boundaries:
-                    cls._boundaries[BoundaryType.ZR].add_nodes(cls._new_boundary_data)
-            # If new boundary data has more X frontier, add it to XT or XB if involved.
-            elif z_frontier_count < x_frontier_count:
+                    cls._boundaries[BoundaryType.ZR].add_nodes(n_new)
+            elif cls._get_node_type(s) == 'Z':
+                n_new = cls._get_undisabled_neighbors(s)
+                # Add all new boundary data to XT or XB if involved.
                 if BoundaryType.XT in involved_boundaries:
-                    cls._boundaries[BoundaryType.XT].add_nodes(cls._new_boundary_data)
+                    cls._boundaries[BoundaryType.XT].add_nodes(n_new)
                 if BoundaryType.XB in involved_boundaries:
-                    cls._boundaries[BoundaryType.XB].add_nodes(cls._new_boundary_data)
-            # If new boundary data has equal X and Z frontier, deal with it according to preferred syndrome type.
-            else:
-                if cls._adapt_options.preferred_syndrome_type == 'X':
-                    if BoundaryType.XT in involved_boundaries:
-                        cls._boundaries[BoundaryType.XT].add_nodes(cls._new_boundary_data)
-                    if BoundaryType.XB in involved_boundaries:
-                        cls._boundaries[BoundaryType.XB].add_nodes(cls._new_boundary_data)
-                elif cls._adapt_options.preferred_syndrome_type == 'Z':
-                    if BoundaryType.ZL in involved_boundaries:
-                        cls._boundaries[BoundaryType.ZL].add_nodes(cls._new_boundary_data)
-                    if BoundaryType.ZR in involved_boundaries:
-                        cls._boundaries[BoundaryType.ZR].add_nodes(cls._new_boundary_data)
-                else:
-                    raise ValueError(f'Invalid preferred syndrome type: {cls._adapt_options.preferred_syndrome_type}.')
-
-        elif node_type == BoundaryNodeType.N:
-            # Visiting wrong node, raise exception.
-            raise AdapterException(f'Visiting wrong node {node}.')
+                    cls._boundaries[BoundaryType.XB].add_nodes(n_new)
+                
         
     @classmethod
-    def _frontier_syndrome_cleaner(cls, syndrome: tuple, involved_boundaries: List[BoundaryType]):
+    def _frontier_syndrome_cleaner(cls, syndrome: tuple):
         """Clean frontier syndrome.
             Args:
                 syndrome: The syndrome to clean.
@@ -199,10 +180,6 @@ class Adapter:
             
         # Disable the syndrome.
         cls._disable_node(syndrome)
-
-        # Get all undisabled neighbors as new data.
-        new_data = cls._get_undisabled_neighbors(syndrome)
-        cls._new_boundary_data.extend(new_data)
 
     @classmethod
     def _boundary_data_safety_check(cls, node: tuple) -> bool:
@@ -529,6 +506,18 @@ class Adapter:
         """
 
         return [neighbor for neighbor in cls._device.graph.neighbors(node) if not cls._is_disabled_node(neighbor)]
+    
+    @classmethod
+    def _get_disabled_neighbors(cls, node: tuple) -> List:
+        """Get disabled neighbors of a node.
+            Args:
+                node: The node to get neighbors.
+
+            Returns:
+                A list of disabled neighbors.
+        """
+
+        return [neighbor for neighbor in cls._device.graph.neighbors(node) if cls._is_disabled_node(neighbor)]
 
     @classmethod
     def _is_defective_node(cls, node: tuple) -> bool:
