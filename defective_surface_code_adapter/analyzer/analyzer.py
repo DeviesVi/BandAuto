@@ -30,9 +30,9 @@ class Analyzer:
         super_stabilizer_weights_x = [len(cls._data_in_stabilizer(stabilizer)) for stabilizer in cls._adapt_result.stabilizers if len(stabilizer) > 1 and cls._get_stabilizer_type(stabilizer) == 'X']
         super_stabilizer_weights_z = [len(cls._data_in_stabilizer(stabilizer)) for stabilizer in cls._adapt_result.stabilizers if len(stabilizer) > 1 and cls._get_stabilizer_type(stabilizer) == 'Z']
 
-        max_stabilizer_weight, min_stabilizer_weight, me_stabilizer_weight, avg_stabilizer_weight = cls._calculate_statistics(super_stabilizer_weights)
-        max_stabilizer_weight_x, min_stabilizer_weight_x, me_stabilizer_weight_x, avg_stabilizer_weight_x = cls._calculate_statistics(super_stabilizer_weights_x)
-        max_stabilizer_weight_z, min_stabilizer_weight_z, me_stabilizer_weight_z, avg_stabilizer_weight_z = cls._calculate_statistics(super_stabilizer_weights_z)
+        total_count, total_weight, max_weight, min_weight, me_weight, avg_weight = cls._calculate_statistics(super_stabilizer_weights)
+        total_count_x, total_weight_x, max_weight_x, min_weight_x, me_weight_x, avg_weight_x = cls._calculate_statistics(super_stabilizer_weights_x)
+        total_count_z, total_weight_z, max_weight_z, min_weight_z, me_weight_z, avg_weight_z = cls._calculate_statistics(super_stabilizer_weights_z)
 
         disalbed_qubit_count = len(cls._adapt_result.disabled_nodes)
         disabled_qubit_percentage = disalbed_qubit_count / len(cls._device.graph.nodes)
@@ -45,18 +45,24 @@ class Analyzer:
             disalbed_qubit_count=disalbed_qubit_count,
             disabled_qubit_percentage=disabled_qubit_percentage,
             stabilizer_statistics={
-                'max_stabilizer_weight': max_stabilizer_weight,
-                'min_stabilizer_weight': min_stabilizer_weight,
-                'me_stabilizer_weight': me_stabilizer_weight,
-                'avg_stabilizer_weight': avg_stabilizer_weight,
-                'max_stabilizer_weight_x': max_stabilizer_weight_x,
-                'min_stabilizer_weight_x': min_stabilizer_weight_x,
-                'me_stabilizer_weight_x': me_stabilizer_weight_x,
-                'avg_stabilizer_weight_x': avg_stabilizer_weight_x,
-                'max_stabilizer_weight_z': max_stabilizer_weight_z,
-                'min_stabilizer_weight_z': min_stabilizer_weight_z,
-                'me_stabilizer_weight_z': me_stabilizer_weight_z,
-                'avg_stabilizer_weight_z': avg_stabilizer_weight_z,
+                'total_count': total_count,
+                'total_weight': total_weight,
+                'max_weight': max_weight,
+                'min_weight': min_weight,
+                'me_weight': me_weight,
+                'avg_weight': avg_weight,
+                'total_count_x': total_count_x,
+                'total_weight_x': total_weight_x,
+                'max_weight_x': max_weight_x,
+                'min_weight_x': min_weight_x,
+                'me_weight_x': me_weight_x,
+                'avg_weight_x': avg_weight_x,
+                'total_count_z': total_count_z,
+                'total_weight_z': total_weight_z,
+                'max_weight_z': max_weight_z,
+                'min_weight_z': min_weight_z,
+                'me_weight_z': me_weight_z,
+                'avg_weight_z': avg_weight_z,
             }
         )
     
@@ -64,13 +70,15 @@ class Analyzer:
     def _calculate_statistics(cls, weights):
         if len(weights) > 0:
             return (
+                len(weights),
+                int(np.sum(weights)),
                 int(np.max(weights)),
                 int(np.min(weights)),
                 int(np.median(weights)),
                 float(np.mean(weights))
             )
         else:
-            return (None, None, None, None)
+            return (None, None, None, None, None, None)
         
     @classmethod
     def _analyze_error_type(cls, error_type: str) -> Tuple[int, int]:
