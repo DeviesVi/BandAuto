@@ -29,16 +29,12 @@ def main():
 
     p = 0.002
     physical_errors = PhysicalErrors.SI1000_from_p(p)
-    shell_size_range = range(1, (d+1)//2)
 
     for d in ds:
+        shell_size_range = range(1, (d+1)//2)
         for dr in defect_rates:
             source_dir = f'device_pool/qubit_equal_coupler/device_d{d}_qdr{dr}_cdr{dr}/devices'
             destination_dir = f'data/samples/global_shell/samples_d{d}_qdr{dr}_cdr{dr}_p{p}'
-
-            # Check destination directory exists
-            if not os.path.exists(destination_dir):
-                os.makedirs(destination_dir)
 
             for file in os.listdir(source_dir):
                 device = Device.load(f'{source_dir}/{file}')
@@ -48,13 +44,17 @@ def main():
                     continue
                 try:
                     samples = sampler.sample(gen_tasks(device, shell_size_range, physical_errors))
-                except:
+                    # Check destination directory exists
+                    if not os.path.exists(destination_dir):
+                        os.makedirs(destination_dir)
+                    pickle.dump(samples, open(samples_path, 'wb'))
+                except Exception as e:
                     print(f'Failed to generate samples for device {device.strong_id}')
+                    print(e)
                     # Log
                     with open('failed_devices.txt', 'a') as f:
                         f.write(f'{device.strong_id}\n')
                     continue
-                pickle.dump(samples, open(samples_path, 'wb'))
 
 
 # NOTE: This is actually necessary! If the code inside 'main()' was at the
