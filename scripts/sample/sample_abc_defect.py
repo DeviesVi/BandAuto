@@ -22,6 +22,7 @@ def gen_tasks(devices: List[Device]):
                     physical_errors_list=[physical_errors],
                     holding_cycle_option=holding_cycle_option,
                     specified_holding_cycle=specified_cycle,
+                    use_traditional_adapter=use_traditional_adapter,
                     metadata={
                         "device_index": i,
                         "use_traditional_adapter": use_traditional_adapter,
