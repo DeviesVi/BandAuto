@@ -4,7 +4,7 @@ from collections import defaultdict
 import json
 
 devices_paths = {
-    (d, dr): f'device_pool/device_d{d}_qdr{dr}_cdr{dr}/devices'
+    (d, dr): f'device_pool/qubit_equal_coupler/device_d{d}_qdr{dr}_cdr{dr}/devices'
     for d in [15, 21, 27]
     for dr in [0.005, 0.01, 0.015, 0.02]
 }
@@ -22,5 +22,8 @@ for (d, dr), devices_path in devices_paths.items():
         results[d][dr][strong_id]['Bandage'] = result.to_dict()
         results[d][dr][strong_id]['Tradition'] = t_result.to_dict()
 
-with open('sp_data/cmp_statistics.json', 'w') as f:
+if not os.path.exists('data/statistics'):
+    os.makedirs('data/statistics')
+
+with open('data/statistics/bandage_vs_tradition.json', 'w') as f:
     json.dump(results, f)
