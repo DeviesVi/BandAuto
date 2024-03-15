@@ -78,7 +78,7 @@ class Analyzer:
                 float(np.mean(weights))
             )
         else:
-            return (None, None, None, None, None, None)
+            return (0, 0, None, None, None, None)
         
     @classmethod
     def _analyze_error_type(cls, error_type: str) -> Tuple[int, int]:
