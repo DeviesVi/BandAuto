@@ -125,6 +125,8 @@ class BuilderOptions:
     u1gate = U1Gate.H
     u2gate = U2Gate.CZ
 
+    use_traditional_adapter = False
+
     physical_errors = PhysicalErrors.ratio_google_error(1)
 
     def __post_init__(self) -> None:

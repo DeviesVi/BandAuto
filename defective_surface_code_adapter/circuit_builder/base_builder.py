@@ -6,7 +6,7 @@ from math import floor
 from functools import cached_property
 
 from ..device import Device
-from ..adapter import Adapter
+from ..adapter import Adapter, TraditionalAdapter
 
 from .data import BuilderOptions, Stabilizer, StabilizerGroup, HoldingCycleOption, U2Gate
 
@@ -17,7 +17,10 @@ class BaseBuilder(ABC):
     def __init__(self, device:Device, builder_options: BuilderOptions | None = None) -> None:
         """Constructor."""
         self.device = device
-        self.adapt_result = Adapter.adapt_device(device)
+        if builder_options.use_traditional_adapter:
+            self.adapt_result = TraditionalAdapter.adapt_device(device)
+        else:
+            self.adapt_result = Adapter.adapt_device(device)
         self._stabilizers: List[Stabilizer] = []
 
         if builder_options is None:

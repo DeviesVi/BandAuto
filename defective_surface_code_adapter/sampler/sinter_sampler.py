@@ -35,6 +35,7 @@ class SinterSampler:
         specified_holding_cycle: int | None = None,
         specified_holding_cycle_x: int | None = None,
         specified_holding_cycle_z: int | None = None,
+        use_traditional_adapter: bool = False,
         metadata: Dict[str, Any] = {},
     ) -> Generator[sinter.Task, None, None]:
         for physical_errors in physical_errors_list:
@@ -47,6 +48,7 @@ class SinterSampler:
             options.stabilizer_group_specified_holding_cycle = specified_holding_cycle
             options.stabilizer_group_specified_holding_cycle_x = specified_holding_cycle_x
             options.stabilizer_group_specified_holding_cycle_z = specified_holding_cycle_z
+            options.use_traditional_adapter = use_traditional_adapter
 
             if holding_cycle_option == HoldingCycleOption.SPECIFIED:
                 assert specified_holding_cycle is not None or specified_holding_cycle_x is not None and specified_holding_cycle_z is not None                
