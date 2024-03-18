@@ -142,11 +142,11 @@ class Adapter:
             x_count = 0
             z_count = 0
             for syndrome in sd:
-                nnew = cls._get_undisabled_neighbors(syndrome)
+                n0 = [node for node in cls._get_undisabled_neighbors(syndrome) if len(cls._get_undisabled_neighbors(node)) == 3]
                 if cls._get_node_type(syndrome) == 'X':
-                    x_count += len(nnew)
+                    x_count += len(n0)
                 if cls._get_node_type(syndrome) == 'Z':
-                    z_count += len(nnew)
+                    z_count += len(n0)
             if x_count < z_count:
                 bn_type = BoundaryNodeType.X
             elif x_count > z_count:
@@ -157,17 +157,18 @@ class Adapter:
                 elif cls._adapt_options.preferred_syndrome_type == 'Z':
                     bn_type = BoundaryNodeType.Z
         for syndrome in sd:
-            nnew = cls._get_undisabled_neighbors(syndrome)
-            if bn_type == BoundaryNodeType.X:
-                # Add new data nodes to the X boundaries if involved.
-                for b_type in [BoundaryType.XT, BoundaryType.XB]:
-                    if b_type in involved_boundaries:
-                        cls._boundaries[b_type].add_nodes(nnew)
-            elif bn_type == BoundaryNodeType.Z:
-                # Add new data nodes to the Z boundaries if involved.
-                for b_type in [BoundaryType.ZL, BoundaryType.ZR]:
-                    if b_type in involved_boundaries:
-                        cls._boundaries[b_type].add_nodes(nnew)
+            if cls._get_node_type(syndrome) == 'X' and bn_type == BoundaryNodeType.Z or cls._get_node_type(syndrome) == 'Z' and bn_type == BoundaryNodeType.X:
+                n1 = cls._get_undisabled_neighbors(syndrome)
+                if bn_type == BoundaryNodeType.X:
+                    # Add new data nodes to the X boundaries if involved.
+                    for b_type in [BoundaryType.XT, BoundaryType.XB]:
+                        if b_type in involved_boundaries:
+                            cls._boundaries[b_type].add_nodes(n1)
+                elif bn_type == BoundaryNodeType.Z:
+                    # Add new data nodes to the Z boundaries if involved.
+                    for b_type in [BoundaryType.ZL, BoundaryType.ZR]:
+                        if b_type in involved_boundaries:
+                            cls._boundaries[b_type].add_nodes(n1)
         
     @classmethod
     def _frontier_syndrome_cleaner(cls, syndrome: tuple):
