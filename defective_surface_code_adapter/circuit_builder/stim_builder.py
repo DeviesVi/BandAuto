@@ -17,7 +17,7 @@ class StimBuilder(BaseBuilder):
     def init_circuit(self):
         self.circuit_buffer = StringIO()
         self._node_index = {}
-        self._measuremnt_records = MeasurementRecords()
+        self._measurement_records = MeasurementRecords()
         self._stabilizer_cycle_records = defaultdict(list)
         self._logical_observable_count = 0
         self._op_this_time_step = OPType.INIT
@@ -91,7 +91,7 @@ class StimBuilder(BaseBuilder):
     def measurement(self, dest):
         self.circuit_buffer.write(f'M({self._builder_options.physical_errors.measurement}) {self._node_index[dest]}\n')
         # Record measurements
-        self._measuremnt_records.add_record(dest, self._current_cycle)
+        self._measurement_records.add_record(dest, self._current_cycle)
         self._op_this_time_step = OPType.MEAS
         self._operated_qubits_this_time_step.add(dest)
 
@@ -147,15 +147,15 @@ class StimBuilder(BaseBuilder):
             self.circuit_buffer.write(f'DETECTOR')
             for node in stabilizer.syndromes:
                 if former_cycle is not None:
-                    self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(node, former_cycle)}]')
-                self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(node, latter_cycle)}]')
+                    self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(node, former_cycle)}]')
+                self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(node, latter_cycle)}]')
             self.circuit_buffer.write('\n')
         else:
             for node in stabilizer.syndromes:
                 self.circuit_buffer.write(f'DETECTOR')
                 if former_cycle is not None:
-                    self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(node, former_cycle)}]')
-                self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(node, latter_cycle)}]')
+                    self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(node, former_cycle)}]')
+                self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(node, latter_cycle)}]')
                 self.circuit_buffer.write('\n')
 
     def _is_gauge_changed(self, stabilizer: Stabilizer, cycle: int) -> bool:
@@ -185,37 +185,37 @@ class StimBuilder(BaseBuilder):
             if self._max_cycle - 1 in self._stabilizer_cycle_records[stabilizer]:
                 for syndrome in stabilizer.syndromes:
                     self.circuit_buffer.write(f'DETECTOR')
-                    self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._max_cycle - 1)}]')
+                    self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(syndrome, self._max_cycle - 1)}]')
                     for data in self._data_in_syndrome(syndrome):
-                        self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]')
+                        self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(data, self._max_cycle - 1)}]')
                     self.circuit_buffer.write('\n')
             else:
                 self.circuit_buffer.write(f'DETECTOR')
                 for syndrome in stabilizer.syndromes:
                     if len(self._stabilizer_cycle_records[stabilizer]) > 0:
-                        self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-1])}]')
+                        self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-1])}]')
                 for data in stabilizer.data_qubits:
-                    self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]')
+                    self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(data, self._max_cycle - 1)}]')
                 self.circuit_buffer.write('\n')
         else:
             if self._max_cycle - 1 in self._stabilizer_cycle_records[stabilizer] and not self._is_gauge_changed(stabilizer, self._max_cycle - 1):
                 for syndrome in stabilizer.syndromes:
                     self.circuit_buffer.write(f'DETECTOR')
-                    self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._max_cycle - 1)}]')
+                    self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(syndrome, self._max_cycle - 1)}]')
                     if self._max_cycle - 2 in self._stabilizer_cycle_records[stabilizer]:
-                        self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._max_cycle - 2)}]')
+                        self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(syndrome, self._max_cycle - 2)}]')
                     for data in self._data_in_syndrome(syndrome):
-                        self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]')
+                        self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(data, self._max_cycle - 1)}]')
                     self.circuit_buffer.write('\n')
             else:
                 self.circuit_buffer.write(f'DETECTOR')
                 for syndrome in stabilizer.syndromes:
                     if len(self._stabilizer_cycle_records[stabilizer]) > 0:
-                        self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-1])}]')
+                        self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-1])}]')
                     if len(self._stabilizer_cycle_records[stabilizer]) > 1:    
-                        self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-2])}]')
+                        self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(syndrome, self._stabilizer_cycle_records[stabilizer][-2])}]')
                 for data in stabilizer.data_qubits:
-                    self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]')
+                    self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(data, self._max_cycle - 1)}]')
                 self.circuit_buffer.write('\n')
 
     def _generate_logical_operators(self):
@@ -230,7 +230,7 @@ class StimBuilder(BaseBuilder):
         self.circuit_buffer.write(f'OBSERVABLE_INCLUDE({self._logical_observable_count})')
         self._logical_observable_count += 1
         for data in logical_data_qubits:
-            self.circuit_buffer.write(f' rec[{self._measuremnt_records.stim_rec_index(data, self._max_cycle - 1)}]')
+            self.circuit_buffer.write(f' rec[{self._measurement_records.stim_rec_index(data, self._max_cycle - 1)}]')
         self.circuit_buffer.write('\n')
 
     def _is_first_cycle_stabilizer(self, stabilizer: Stabilizer) -> bool:
