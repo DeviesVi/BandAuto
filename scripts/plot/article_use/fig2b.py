@@ -29,31 +29,27 @@ distance = [15, 21, 27]
 defect_rates = [0.02, 0.015, 0.01, 0.005]
 
 device_paths = {
-    (d, dr): f"device_pool/device_d{d}_qdr{dr}_cdr{dr}/devices"
+    (d, dr): f"device_pool/qubit_equal_coupler/device_d{d}_qdr{dr}_cdr{dr}/devices"
     for d in distance
     for dr in defect_rates
 }
 
 sample_paths = {
-    (d, dr): (
-        f"device_pool/device_d{d}_qdr{dr}_cdr{dr}/samples_over_specified_cycle"
-        if not (d == 21 and dr == 0.02)
-        else f"device_pool/device_d{d}_qdr{dr}_cdr{dr}/samples_over_holding_options_p0.002"
-    )
+    (d, dr): f"data/samples/global_shell/samples_d{d}_qdr{dr}_cdr{dr}_p0.002"
     for d in distance
     for dr in defect_rates
 }
 
 perfect_device_paths = [
-    "device_pool/device_d15_qdr0_cdr0/devices/device_04c4a53224db00ca8c1b5ff40db07fe792268764a5f84d737d09923fb9eb8c2e.pkl",
-    "device_pool/device_d21_qdr0_cdr0/devices/device_0466bb5cca000f36704b3eee72ea19060f40c8008a0dda96661f3f30c54b39ba.pkl",
-    "device_pool/device_d27_qdr0_cdr0/devices/device_3eb43fcb57726a6e82badc1a68104382c1e03971ab65a13f1fd3849cca422ff0.pkl",
+    "device_pool/perfect/device_d15_qdr0_cdr0/devices/device_04c4a53224db00ca8c1b5ff40db07fe792268764a5f84d737d09923fb9eb8c2e.pkl",
+    "device_pool/perfect/device_d21_qdr0_cdr0/devices/device_0466bb5cca000f36704b3eee72ea19060f40c8008a0dda96661f3f30c54b39ba.pkl",
+    "device_pool/perfect/device_d27_qdr0_cdr0/devices/device_3eb43fcb57726a6e82badc1a68104382c1e03971ab65a13f1fd3849cca422ff0.pkl",
 ]
 
 perfect_SI1000_p = [0.002, 0.003, 0.004]
 
 perfect_sample_paths = (
-    "device_pool/device_d{d}_qdr0_cdr0/samples_p{p}/samples_{strong_id}.pkl"
+    "data/samples/perfect_ref/samples_d{d}_qdr0_cdr0_p{p}/samples_{strong_id}.pkl"
 )
 
 results = {
