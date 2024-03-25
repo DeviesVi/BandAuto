@@ -137,6 +137,42 @@ class Device:
             for edge in np.random.choice(list(self.graph.edges), coupler_defect_num, replace=False):
                 self.graph.edges[edge]['defective'] = True
 
+    def add_random_defect_in_area(self, x0: int, y0: int, x1: int, y1: int, qubit_defect_rate: float, coupler_defect_rate: float, exact_rate: bool = False, clear_defect: bool = True):
+        """Add random defect to the area.
+            Args:
+                x0: The x coordinate of the left bottom corner of the area.
+                y0: The y coordinate of the left bottom corner of the area.
+                x1: The x coordinate of the right top corner of the area.
+                y1: The y coordinate of the right top corner of the area.
+                qubit_defect_rate: The probability of a qubit is defective.
+                coupler_defect_rate: The probability of a coupler is defective.
+                exact_rate: If True, the defect rate will be exactly qubit_defect_rate and coupler_defect_rate.
+        """
+        assert x0 >= 0 and y0 >= 0 and x1 >= x0 and  y1 >= y0, 'The coordinate must be positive and x1, y1 must be larger than x0, y0.'
+
+        if clear_defect:
+            self.clear_all_defect()
+
+        self._qubit_defect_rate = qubit_defect_rate
+        self._coupler_defect_rate = coupler_defect_rate
+        self._exact_rate = exact_rate
+
+        if not exact_rate:
+            for node in self.graph.nodes:
+                if x0 <= node[0] <= x1 and y0 <= node[1] <= y1:
+                    self.graph.nodes[node]['defective'] = self._randomTrue(qubit_defect_rate)
+            for edge in self.graph.edges:
+                if x0 <= edge[0][0] <= x1 and y0 <= edge[0][1] <= y1 and x0 <= edge[1][0] <= x1 and y0 <= edge[1][1] <= y1:
+                    self.graph.edges[edge]['defective'] = self._randomTrue(coupler_defect_rate)
+        else:
+            qubit_defect_num = int(qubit_defect_rate * len([node for node in self.graph.nodes if x0 <= node[0] <= x1 and y0 <= node[1] <= y1]))
+            coupler_defect_num = int(coupler_defect_rate * len([edge for edge in self.graph.edges if x0 <= edge[0][0] <= x1 and y0 <= edge[0][1] <= y1 and x0 <= edge[1][0] <= x1 and y0 <= edge[1][1] <= y1]))
+            for node in np.random.choice([(x, y) for x in range(x0, x1+1) for y in range(y0, y1+1)], qubit_defect_num, replace=False):
+                self.graph.nodes[node]['defective'] = True
+            for edge in np.random.choice([((x, y), (x+1, y)) for x in range(x0, x1) for y in range(y0, y1)] + [((x, y), (x, y+1)) for x in range(x0, x1) for y in range(y0, y1)], coupler_defect_num, replace=False):
+                self.graph.edges[edge]['defective'] = True
+
+
     def add_center_defect(self, diameter: int, clear_defect: bool = True):
         """Add defect on the center of the device with cirtain diameter.
             Args:
@@ -155,21 +191,21 @@ class Device:
             for y in range(center[1] - coord_radius, center[1] + coord_radius + 1, 2):
                 self.graph.nodes[(x, y)]['defective'] = True      
 
-    def add_ractangle_defect(self, x: int, y: int, width: int, height: int, clear_defect: bool = True):
+    def add_ractangle_defect(self, x0: int, y0: int, x1: int, y1: int, clear_defect: bool = True):
         """Add defect on the rectangle area.
             Args:
-                x: The x coordinate of the left bottom corner of the rectangle.
-                y: The y coordinate of the left bottom corner of the rectangle.
-                width: The width of the rectangle.
-                height: The height of the rectangle.
+                x0: The x coordinate of the left bottom corner of the rectangle.
+                y0: The y coordinate of the left bottom corner of the rectangle.
+                x1: The x coordinate of the right top corner of the rectangle.
+                y1: The y coordinate of the right top corner of the rectangle.
         """
-        assert x >= 0 and y >= 0 and width >= 0 and height >= 0, 'The coordinate and size must be positive.'
+        assert x0 >= 0 and y0 >= 0 and x1 >= x0 and  y1 >= y0, 'The coordinate must be positive and x1, y1 must be larger than x0, y0.'
 
         if clear_defect:
             self.clear_all_defect()
 
-        for i in range(x, x + 2 * width, 2):
-            for j in range(y, y + 2 * height, 2):
+        for i in range(x0, x1+1):
+            for j in range(y0, y1+1):
                 if (i, j) in self.graph.nodes:
                     self.graph.nodes[(i, j)]['defective'] = True
 
