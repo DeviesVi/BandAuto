@@ -31,16 +31,16 @@ def gen_tasks(devices: List[Device]):
 
 def main():
     device0 = Device(7,7)
-    device0.add_ractangle_defect(7,7,1,1, clear_defect=False)
+    device0.add_ractangle_defect(7,7,7,7, clear_defect=False)
 
     device1 = Device(7,7)
-    device1.add_ractangle_defect(7,7,1,1, clear_defect=False)
-    device1.add_ractangle_defect(9,9,1,1, clear_defect=False)
+    device1.add_ractangle_defect(7,7,7,7, clear_defect=False)
+    device1.add_ractangle_defect(9,9,9,9, clear_defect=False)
     
     device2 = Device(7,7)
-    device2.add_ractangle_defect(5,5,1,1, clear_defect=False)
-    device2.add_ractangle_defect(7,7,1,1, clear_defect=False)
-    device2.add_ractangle_defect(9,9,1,1, clear_defect=False)
+    device2.add_ractangle_defect(5,5,5,5, clear_defect=False)
+    device2.add_ractangle_defect(7,7,7,7, clear_defect=False)
+    device2.add_ractangle_defect(9,9,9,9, clear_defect=False)
 
     samples = sampler.sample(gen_tasks([device0, device1, device2]))
 
