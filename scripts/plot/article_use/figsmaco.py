@@ -21,7 +21,7 @@ color = itertools.cycle(
 )
 
 notation_positions = (-0.3, 1)
-notation_fontsize = 12
+notation_fontsize = 16
 markersize = 4
 legend_fontsize = 8
 xylabel_fontsize = 12
@@ -79,7 +79,7 @@ plt.grid()
 
 ax.text(
     *notation_positions,
-    "(c)",
+    "(a)",
     transform=ax.transAxes,
     va="top",
     fontsize=notation_fontsize,
@@ -131,7 +131,7 @@ plt.grid()
 
 ax.text(
     *notation_positions,
-    "(d)",
+    "(b)",
     transform=ax.transAxes,
     va="top",
     fontsize=notation_fontsize,
@@ -183,7 +183,7 @@ plt.grid()
 
 ax.text(
     *notation_positions,
-    "(e)",
+    "(c)",
     transform=ax.transAxes,
     va="top",
     fontsize=notation_fontsize,
@@ -247,7 +247,7 @@ plt.grid()
 
 ax.text(
     *notation_positions,
-    "(f)",
+    "(d)",
     transform=ax.transAxes,
     va="top",
     fontsize=notation_fontsize,

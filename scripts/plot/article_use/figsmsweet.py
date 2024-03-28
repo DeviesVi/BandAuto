@@ -74,7 +74,7 @@ sinter.plot_error_rate(
 
 ax.grid()
 ax.set_ylabel("LER")
-ax.set_xlabel("Global Shell Size")
+ax.set_xlabel("$n_{\\text{shell}}$")
 ax.legend(fontsize=legend_fontsize)
 ax.text(*notation_positions, '(a)', transform=ax.transAxes, va='top', fontsize=notation_fontsize)
 
@@ -94,7 +94,7 @@ sinter.plot_error_rate(
 ax.grid()
 ax.set_ylim(0.0075, 0.040)
 ax.set_ylabel("LER")
-ax.set_xlabel("Local Shell Ratio")
+ax.set_xlabel("r")
 ax.legend(fontsize=legend_fontsize)
 ax.text(*notation_positions, '(b)', transform=ax.transAxes, va='top', fontsize=notation_fontsize)
 

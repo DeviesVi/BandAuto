@@ -105,7 +105,7 @@ ax.axvline(x=np.median(min_ler_relative_diff[("SPECIFIED", "LOCALMAX")]["+"]), c
 
 ax.legend(fontsize=legend_fontsize)
 ax.set_ylabel("CDF")
-ax.set_xlabel("Relative LER Diff at Sweet Point")
+ax.set_xlabel("Relative LER Difference")
 ax.grid()
 ax.set_ylim(0, 1)
 
