@@ -6,7 +6,7 @@ drs = [0.005, 0.01, 0.015, 0.02]
 
 for d in ds:
     for dr in drs:
-        destination_dir = f'device_pool/qubit_equal_coupler/device_d{d}_qdr{dr}_cdr{dr}/devices'
+        destination_dir = f'device_pool/coupler_only/device_d{d}_qdr0_cdr{dr}/devices'
 
         # Create destination directory if it does not exist
         if not os.path.exists(destination_dir):
@@ -16,7 +16,7 @@ for d in ds:
         # Parameters for generating devices
         width = d
         height = d
-        qubit_defect_rate = dr
+        qubit_defect_rate = 0
         coupler_defect_rate = dr
 
         device_count = 100

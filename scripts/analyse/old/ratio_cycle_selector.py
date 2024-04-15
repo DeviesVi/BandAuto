@@ -7,7 +7,7 @@ import pickle
 import sinter
 from typing import List, Callable, Any, Dict, Tuple
 import numpy as np
-from data_dir import device_dir, sample_dir
+from scripts.analyse.old.data_dir import device_dir, sample_dir
 
 def calculate_ler(sample: sinter.TaskStats):
     return sample.errors/(sample.shots - sample.discards)
