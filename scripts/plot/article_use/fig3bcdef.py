@@ -23,7 +23,8 @@ color = itertools.cycle(
 notation_positions = (-0.3, 1)
 notation_fontsize = 12
 markersize = 4
-legend_fontsize = 8
+legend_fontsize = 7
+handlelength=3.0
 xylabel_fontsize = 12
 
 distances = [15, 21, 27]
@@ -74,7 +75,7 @@ for d in distances:
 plt.xticks(defect_rates)
 plt.xlabel("Defect Rate", fontsize=xylabel_fontsize)
 plt.ylabel("Avg. X Distance", fontsize=xylabel_fontsize)
-plt.legend(fontsize=legend_fontsize)
+plt.legend(fontsize=legend_fontsize, handlelength=handlelength)
 plt.grid()
 
 ax.text(
@@ -126,7 +127,7 @@ for d in distances:
 plt.xticks(defect_rates)
 plt.xlabel("Defect Rate", fontsize=xylabel_fontsize)
 plt.ylabel("Avg. Z Distance", fontsize=xylabel_fontsize)
-plt.legend(fontsize=legend_fontsize)
+plt.legend(fontsize=legend_fontsize, handlelength=handlelength)
 plt.grid()
 
 ax.text(
@@ -178,7 +179,7 @@ for d in distances:
 plt.xticks(defect_rates)
 plt.xlabel("Defect Rate", fontsize=xylabel_fontsize)
 plt.ylabel("Avg. Disabled Qubit Pct.", fontsize=xylabel_fontsize)
-plt.legend(fontsize=legend_fontsize)
+plt.legend(fontsize=legend_fontsize, handlelength=handlelength)
 plt.grid()
 
 ax.text(
@@ -242,7 +243,7 @@ for d in distances:
 plt.xticks(defect_rates)
 plt.xlabel("Defect Rate", fontsize=xylabel_fontsize)
 plt.ylabel("Avg. Super-Stab. Weight", fontsize=xylabel_fontsize)
-plt.legend(fontsize=legend_fontsize)
+plt.legend(fontsize=legend_fontsize, handlelength=handlelength)
 plt.grid()
 
 ax.text(
@@ -331,7 +332,7 @@ for s in ["0", "+"]:
 plt.xticks(range(1, 4), ["A", "AB", "ABC"])
 plt.xlabel("Defective Data Qubits", fontsize=xylabel_fontsize)
 plt.ylabel("LER", fontsize=xylabel_fontsize)
-plt.legend(fontsize=legend_fontsize)
+plt.legend(fontsize=legend_fontsize, handlelength=handlelength)
 plt.grid()
 
 ax.text(
