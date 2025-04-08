@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "defective-surface-code-adapter"
 version = "0.1.0"
-description = "This repo facilitated an fully automatic adapter using bandage-like super-stabilizer for the surface code on defective lattice"
+description = "This repository provides a fully automated adapter that employs a bandage-like super-stabilizer for the surface code on a defective lattice."
 readme = "README.md"
 license = "MIT"
 authors = [
