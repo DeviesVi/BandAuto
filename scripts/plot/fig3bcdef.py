@@ -31,7 +31,7 @@ distances = [15, 21, 27]
 defect_rates = [0.005, 0.01, 0.015, 0.02]
 
 
-with open("data/statistics/bandage_vs_tradition.json", "r") as f:
+with open("manuscript_data/sample_data/statistics/bandage_vs_tradition.json", "r") as f:
     results: Dict[str, Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]] = json.load(f)
 
 ax = plt.subplot(232)
@@ -262,7 +262,7 @@ ax.text(*notation_positions, "(a)", transform=ax.transAxes, va="top", fontsize=1
 ax = plt.subplot(234)
 
 samples: List[sinter.TaskStats] = pickle.load(
-    open("data/samples/abc_defect/abc_defect.pkl", "rb")
+    open("manuscript_data/sample_data/samples/abc_defect/abc_defect.pkl", "rb")
 )
 
 legend = {

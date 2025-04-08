@@ -17,7 +17,7 @@ distances = [15, 21, 27]
 defect_rates = [0.01, 0.02, 0.03, 0.04]
 
 
-with open("data/statistics/bandage_vs_tradition_coupler_only.json", "r") as f:
+with open("manuscript_data/sample_data/statistics/bandage_vs_tradition_coupler_only.json", "r") as f:
     results: Dict[str, Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]] = json.load(f)
 
 print("X Distance")

@@ -17,8 +17,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "stim==1.14.0",
-    "sinter==1.14.0",
+    "stim==1.13.0",
+    "sinter==1.13.0",
     "networkx==3.4.2",
     "matplotlib==3.10.1",
     "numpy==1.26.4",

@@ -15,7 +15,7 @@ linewidth = 0.3
 flier_size = 4
 
 
-with open("data/statistics/bandage_vs_tradition.json", "r") as f:
+with open("manuscript_data/sample_data/statistics/bandage_vs_tradition.json", "r") as f:
     results: Dict[str, Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]] = json.load(f)
 
 

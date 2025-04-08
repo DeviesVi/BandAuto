@@ -28,8 +28,8 @@ def main():
 
     for d in ds:
         for p in ps:
-            source_dir = f'device_pool/perfect/device_d{d}_qdr0_cdr0/devices'
-            destination_dir = f'data/samples/perfect_ref/samples_d{d}_qdr0_cdr0_p{p}'
+            source_dir = f'manuscript_data/defective_devices/perfect/device_d{d}_qdr0_cdr0/devices'
+            destination_dir = f'manuscript_data/sample_data/samples/perfect_ref/samples_d{d}_qdr0_cdr0_p{p}'
             physical_errors = PhysicalErrors.SI1000_from_p(p)
             for file in os.listdir(source_dir):
                 device = Device.load(f'{source_dir}/{file}')

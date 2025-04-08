@@ -44,9 +44,9 @@ def main():
 
     samples = sampler.sample(gen_tasks([device0, device1, device2]))
 
-    if not os.path.exists('data/samples/abc_defect'):
-        os.makedirs('data/samples/abc_defect')
-    pickle.dump(samples, open('data/samples/abc_defect/abc_defect.pkl', 'wb'))
+    if not os.path.exists('manuscript_data/sample_data/samples/abc_defect'):
+        os.makedirs('manuscript_data/sample_data/samples/abc_defect')
+    pickle.dump(samples, open('manuscript_data/sample_data/samples/abc_defect/abc_defect.pkl', 'wb'))
 
 if __name__ == '__main__':
     main()

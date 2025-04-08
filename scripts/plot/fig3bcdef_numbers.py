@@ -17,7 +17,7 @@ distances = [15, 21, 27]
 defect_rates = [0.005, 0.01, 0.015, 0.02]
 
 
-with open("data/statistics/bandage_vs_tradition.json", "r") as f:
+with open("manuscript_data/sample_data/statistics/bandage_vs_tradition.json", "r") as f:
     results: Dict[str, Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]] = json.load(f)
 
 print("X Distance")
@@ -166,7 +166,7 @@ for d in distances:
     print("-" * 40)
 
 samples: List[sinter.TaskStats] = pickle.load(
-    open("data/samples/abc_defect/abc_defect.pkl", "rb")
+    open("manuscript_data/sample_data/samples/abc_defect/abc_defect.pkl", "rb")
 )
 
 results = {

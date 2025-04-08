@@ -6,7 +6,7 @@ drs = [0.005, 0.01, 0.015, 0.02]
 
 for d in ds:
     for dr in drs:
-        destination_dir = f'device_pool/coupler_only/device_d{d}_qdr0_cdr{dr}/devices'
+        destination_dir = f'manuscript_data/defective_devices/coupler_only/device_d{d}_qdr0_cdr{dr}/devices'
 
         # Create destination directory if it does not exist
         if not os.path.exists(destination_dir):

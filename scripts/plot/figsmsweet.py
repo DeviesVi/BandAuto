@@ -25,9 +25,9 @@ plt.figure(figsize=(4, 4), dpi=100)
 print('Making fig a...')
 ax = plt.subplot(211)
 
-device_path = 'device_pool/qubit_equal_coupler/device_d21_qdr0.02_cdr0.02/devices/device_f18efd2f3ded1a49e8011fd565ecb19bf277c3010172993707f78c633d2dac40.pkl'
-global_sample_dir = 'data/samples/global_shell/samples_d21_qdr0.02_cdr0.02_p0.002'
-local_sample_dir = 'data/samples/local_shell/samples_d21_qdr0.02_cdr0.02_p0.002'
+device_path = 'manuscript_data/defective_devices/qubit_equal_coupler/device_d21_qdr0.02_cdr0.02/devices/device_f18efd2f3ded1a49e8011fd565ecb19bf277c3010172993707f78c633d2dac40.pkl'
+global_sample_dir = 'manuscript_data/sample_data/samples/global_shell/samples_d21_qdr0.02_cdr0.02_p0.002'
+local_sample_dir = 'manuscript_data/sample_data/samples/local_shell/samples_d21_qdr0.02_cdr0.02_p0.002'
 
 device = Device.load(device_path)
 global_samples_path = f"{global_sample_dir}/samples_{device.strong_id}.pkl"

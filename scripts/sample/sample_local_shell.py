@@ -12,8 +12,8 @@ d = 21
 dr = 0.02
 p = 0.002
 
-source_dir = f'device_pool/qubit_equal_coupler/device_d{d}_qdr{dr}_cdr{dr}/devices'
-destination_dir = f'data/samples/local_shell/samples_d{d}_qdr{dr}_cdr{dr}_p{p}'
+source_dir = f'manuscript_data/defective_devices/qubit_equal_coupler/device_d{d}_qdr{dr}_cdr{dr}/devices'
+destination_dir = f'manuscript_data/sample_data/samples/local_shell/samples_d{d}_qdr{dr}_cdr{dr}_p{p}'
 
 # Check destination directory exists
 if not os.path.exists(destination_dir):

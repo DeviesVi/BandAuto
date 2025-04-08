@@ -23,9 +23,9 @@ plt.figure(figsize=(4, 3), dpi=100)
 
 ax = plt.subplot(111)
 
-device_dir = "device_pool/qubit_equal_coupler/device_d21_qdr0.02_cdr0.02/devices"
-sample_dir_global = "data/samples/global_shell/samples_d21_qdr0.02_cdr0.02_p0.002"
-sample_dir_local = "data/samples/local_shell/samples_d21_qdr0.02_cdr0.02_p0.002"
+device_dir = "manuscript_data/defective_devices/qubit_equal_coupler/device_d21_qdr0.02_cdr0.02/devices"
+sample_dir_global = "manuscript_data/sample_data/samples/global_shell/samples_d21_qdr0.02_cdr0.02_p0.002"
+sample_dir_local = "manuscript_data/sample_data/samples/local_shell/samples_d21_qdr0.02_cdr0.02_p0.002"
 
 min_ler = {
     "SPECIFIED": {"0": [], "+": []},

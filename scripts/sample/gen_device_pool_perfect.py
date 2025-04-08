@@ -6,7 +6,7 @@ drs = [0]
 
 for d in ds:
     for dr in drs:
-        destination_dir = f'device_pool/perfect/device_d{d}_qdr{dr}_cdr{dr}/devices'
+        destination_dir = f'manuscript_data/defective_devices/perfect/device_d{d}_qdr{dr}_cdr{dr}/devices'
 
         # Create destination directory if it does not exist
         if not os.path.exists(destination_dir):

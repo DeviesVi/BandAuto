@@ -33,8 +33,8 @@ def main():
     for d in ds:
         shell_size_range = range(1, (d+1)//2)
         for dr in defect_rates:
-            source_dir = f'device_pool/qubit_equal_coupler/device_d{d}_qdr{dr}_cdr{dr}/devices'
-            destination_dir = f'data/samples/global_shell/samples_d{d}_qdr{dr}_cdr{dr}_p{p}'
+            source_dir = f'manuscript_data/defective_devices/qubit_equal_coupler/device_d{d}_qdr{dr}_cdr{dr}/devices'
+            destination_dir = f'manuscript_data/sample_data/samples/global_shell/samples_d{d}_qdr{dr}_cdr{dr}_p{p}'
 
             for file in os.listdir(source_dir):
                 device = Device.load(f'{source_dir}/{file}')
