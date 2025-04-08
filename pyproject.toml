@@ -7,24 +7,25 @@ name = "defective-surface-code-adapter"
 version = "0.1.0"
 description = "This repo facilitated an fully automatic adapter using bandage-like super-stabilizer for the surface code on defective lattice"
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "MIT"
 authors = [
     { name = "Zuolin Wei", email = "devyswei@mail.ustc.edu.cn" }
 ]
 keywords = ["quantum error correction", "surface code", "defective lattice", "bandage", "super-stabilizer"]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "numpy",
-    "networkx",
-    "matplotlib",
+    "stim==1.14.0",
+    "sinter==1.14.0",
+    "networkx==3.4.2",
+    "matplotlib==3.10.1",
+    "numpy==1.26.4",
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/DeviesVi/defective_surface_code_adapter"
 
 [tool.setuptools]
-packages = ["defective-surface-code-adapter"]
+packages = ["defective_surface_code_adapter"]
