@@ -1,4 +1,4 @@
-# Defective Surface Code Adapter
+# BandAuto: Automated Bandaging for Defective Surface Codes
 
 This repository provides a fully automated adapter that employs a bandage-like super-stabilizer for the surface code on a defective lattice.
 
