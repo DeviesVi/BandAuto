@@ -2,7 +2,9 @@
 
 This repository provides a fully automated adapter that employs a bandage-like super-stabilizer for the surface code on a defective lattice.
 
-Paper link: [arXiv:2404:18644](https://arxiv.org/abs/2404.18644)
+Paper link: 
+- [npj Quantum Inf 11, 75 (2025)](https://doi.org/10.1038/s41534-025-01023-y)
+- [arXiv:2404:18644](https://arxiv.org/abs/2404.18644)
 
 ## Install
 Install this project locally by:
